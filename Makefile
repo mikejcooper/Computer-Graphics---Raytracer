@@ -1,11 +1,3 @@
-OS := $(shell uname)
-ifeq ($(OS),Darwin)
-  # Run MacOS commands
-  GLMDIR = 1
-else
-  # check for Linux and run other commands
-endif
-
 FILE=skeleton
 
 ########
@@ -18,9 +10,19 @@ B_DIR=Build
 EXEC=$(B_DIR)/$(FILE)
 
 # default build settings
-CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 
-LN_OPTS=
+CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -O3 
+LIBS = 
 CC=g++
+
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+  # Run MacOS commands
+  GLMDIR = 1
+  LIBS += -lm -framework OpenCL
+else
+  # check for Linux and run other commands
+  LIBS += -lm -lOpenCL
+endif
 
 ########
 #       SDL options
@@ -49,7 +51,7 @@ $(B_DIR)/$(FILE).o : $(S_DIR)/$(FILE).cpp $(S_DIR)/SDLauxiliary.h $(S_DIR)/TestM
 ########
 #   Main build rule     
 Build : $(OBJ) Makefile
-	$(CC) $(LN_OPTS) -o $(EXEC) $(OBJ) $(SDL_LDFLAGS)
+	$(CC) $(LIBS) -o $(EXEC) $(OBJ) $(SDL_LDFLAGS)
 
 
 clean:

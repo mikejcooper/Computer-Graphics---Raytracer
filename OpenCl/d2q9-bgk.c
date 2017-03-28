@@ -133,6 +133,10 @@ int accelerate_flow(t_ocl ocl)
 
   // Enqueue kernel
   size_t global[1] = {test};
+    // Enqueue kernel
+  // size_t global[2] = {params.nx, params.ny};
+  // size_t local[2]  = {params.nx, 1};
+  
   err = clEnqueueNDRangeKernel(ocl.queue, ocl.accelerate_flow,
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
