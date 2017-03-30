@@ -1,7 +1,7 @@
 #include "Raytracer.h"
 
 #define NUM_LIGHTS 10
-#define SOFT_SHADOWS_SAMPLES 1
+int SOFT_SHADOWS_SAMPLES = 1;
 
 #include <iostream>
 #include <glm/glm.hpp>
@@ -47,11 +47,15 @@ SDL_Surface* screen;
 int t;
 vector<Triangle> triangles;
 vector<Intersection> closestIntersections;
+bool MOVEMENT = true;
 
 
 
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS   */
+
+void SOFT_SHADOWS_SAMPLES_INC();
+void SOFT_SHADOWS_SAMPLES_DEC();
 
 void    Control_LightSource(Uint8* keystate);
 void    Control_Camera(Uint8* keystate);
@@ -220,8 +224,6 @@ vec3 DirectLight( const Intersection& intersection ){
         lightIntensity = 0; // Zero light intensity 
     } 
     
-    // ( lightColor /= (float) SOFT_SHADOWS_SAMPLES )
-
     light += ( lightColor / (float) SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
   return light + indirectLight;
@@ -232,7 +234,7 @@ void SoftShadowPositions(vec3 positions[]){
   positions[0] = lightPos;
   // Settings to handle variable number of soft shadows
   float mul3 = (float) (SOFT_SHADOWS_SAMPLES - 1) / 3;
-  float shift = (mul3 < 1) ? 0.007 : (mul3 < 4) ? 0.005 : (mul3 < 6) ? 0.003 : (mul3 < 10) ? 0.001 : 0.003 ;
+  float shift = (mul3 < 1) ? 0.007 : (mul3 < 4) ? 0.005 : (mul3 < 6) ? 0.004 : (mul3 < 11) ? 0.003 : 0.002 ;
 
   // Find equal positions around light source 
   for(int i = 1; i < SOFT_SHADOWS_SAMPLES; i++) {
@@ -252,8 +254,6 @@ void SoftShadowPositions(vec3 positions[]){
 
 
 
-
-
 void Update()
 {
   // Compute frame time:
@@ -266,8 +266,10 @@ void Update()
 
 void Control(){
   Uint8* keystate = SDL_GetKeyState( 0 );
-  Control_Camera(keystate);
-  Control_LightSource(keystate);
+  if (MOVEMENT){
+    Control_Camera(keystate);
+    Control_LightSource(keystate);
+  }
   Feature_Controls(keystate);
 }
 
@@ -275,70 +277,71 @@ void Control_LightSource(Uint8* keystate){
   vec3 translateX = vec3(0.1,0  ,0);
   vec3 translateY = vec3(0  ,0.1,0);
   vec3 translateZ = vec3(0  ,0  ,0.1);
-  if( keystate[SDLK_w] )
-  {
+
+  if( keystate[SDLK_w] ) {
     lightPos += translateZ;
   }
-  if( keystate[SDLK_s] )
-  {
+  if( keystate[SDLK_s] ) {
     lightPos -= translateZ;
   }
-  if( keystate[SDLK_a] )
-  {
+  if( keystate[SDLK_a] ) {
     lightPos -= translateX;
   }
-  if( keystate[SDLK_d] )
-  {
+  if( keystate[SDLK_d] ) {
     lightPos += translateX;
   }
-  if( keystate[SDLK_q] )
-  {
+  if( keystate[SDLK_q] ) {
     lightPos += translateY;
   }
-  if( keystate[SDLK_e] )
-  {
+  if( keystate[SDLK_e] ) {
     lightPos -= translateY;
   }
 }
 
 void Control_Camera(Uint8* keystate){
-  if( keystate[SDLK_UP] )
-  {
+  if( keystate[SDLK_UP] ) {
       vec3 translateForward = vec3(0,0,0.1);
     cameraPos += translateForward * cameraRot;
   }
-  if( keystate[SDLK_DOWN] )
-  {
+  if( keystate[SDLK_DOWN] ) {
     vec3 translateForward = vec3(0,0,0.1);
     cameraPos -= translateForward * cameraRot;
   }
-  if( keystate[SDLK_LEFT] )
-  {
+  if( keystate[SDLK_LEFT] ) {
     cameraRot *= rotationLeft;
   }
-  if( keystate[SDLK_RIGHT] )
-  {
+  if( keystate[SDLK_RIGHT] ) {
     cameraRot *= rotationRight;
   }
-  if( keystate[SDLK_UP] && keystate[SDLK_LALT] )
-  {
+  if( keystate[SDLK_UP] && keystate[SDLK_RALT] ) {
     cameraRot *= rotationUp;
   }
-  if( keystate[SDLK_DOWN] && keystate[SDLK_LALT] )
-  {
+  if( keystate[SDLK_DOWN] && keystate[SDLK_RALT] ) {
     cameraRot *= rotationDown;
   }
-  if( keystate[SDLK_r] && keystate[SDLK_LALT] )
-  {
+  if( keystate[SDLK_r] && keystate[SDLK_RALT] ) {
     cameraPos = vec3(0.0,0.0,-3);
   }
 }
 
+
 void Feature_Controls(Uint8* keystate){
-  if( keystate[SDLK_l] && keystate[SDLK_EQUALS] )
-    {
-      printf("%s\n", "here");
+  while(keystate[SDLK_LALT]) {
+    SDL_PumpEvents(); // update key state array
+    if(keystate[SDLK_s] && keystate[SDLK_EQUALS] ){
+      SOFT_SHADOWS_SAMPLES_INC();
+      while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
     }
+    if(keystate[SDLK_s] && keystate[SDLK_MINUS] ){
+      SOFT_SHADOWS_SAMPLES_DEC();
+      while (keystate[SDLK_MINUS]) SDL_PumpEvents();
+    }
+    if(keystate[SDLK_m]){
+      MOVEMENT = (MOVEMENT) ? false : true; 
+      cout << "Movement " << MOVEMENT << endl;
+      while (keystate[SDLK_m]) SDL_PumpEvents();
+    }
+  }
 }
 
 
@@ -353,4 +356,24 @@ void Print_Matrix(mat3 A){
   }
 }
 
+
+void SOFT_SHADOWS_SAMPLES_INC(){
+  if(SOFT_SHADOWS_SAMPLES + 6 < 32) {
+    SOFT_SHADOWS_SAMPLES += 6; 
+  }
+  else {
+    SOFT_SHADOWS_SAMPLES = 31;
+  }
+  cout << "Soft Shadow sampling = " << SOFT_SHADOWS_SAMPLES << endl;
+}
+
+void SOFT_SHADOWS_SAMPLES_DEC(){
+  if(SOFT_SHADOWS_SAMPLES - 6 > 1) {
+    SOFT_SHADOWS_SAMPLES -= 6; 
+  }
+  else {
+    SOFT_SHADOWS_SAMPLES = 1;
+  }
+  cout << "Soft Shadow sampling = " << SOFT_SHADOWS_SAMPLES << endl;
+}
 
