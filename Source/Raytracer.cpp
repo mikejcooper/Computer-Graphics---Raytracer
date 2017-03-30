@@ -39,6 +39,8 @@ vec3  lightColor = 14.f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f*vec3( 1, 1, 1 );
 void  Control();
 float turnAngle = (M_PI / 180) * 6;
+mat3  rotationUp(1,0,0,0,cos(turnAngle),-sin(turnAngle),0,sin(turnAngle),cos(turnAngle));
+mat3  rotationDown(1,0,0,0,cos(-turnAngle),-sin(-turnAngle),0,sin(-turnAngle),cos(-turnAngle));
 mat3  rotationLeft(cos(turnAngle),0,-sin(turnAngle),0,1,0,sin(turnAngle),0,cos(turnAngle));
 mat3  rotationRight(cos(-turnAngle),0,-sin(-turnAngle),0,1,0,sin(-turnAngle),0,cos(-turnAngle));
 SDL_Surface* screen;
@@ -65,6 +67,7 @@ void    Draw();
 bool    ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection );
 mat3    Cramers_Inverse(mat3 A);
 void    Feature_Controls(Uint8* keystate);
+void SoftShadowPositions(vec3 positions[]);
 
 
 bool isUpdated = true; // todo
@@ -87,7 +90,7 @@ int main( int argc, char* argv[] )
 
   }
 
-  SDL_SaveBMP( screen, "screenshot.bmp" );
+  SDL_SaveBMP( screen, "screenshot1.bmp" );
   return 0;
 }
 
@@ -161,7 +164,7 @@ bool Intersects(vec3 x){
   // Check if largest float value can hold intersection distance
   float maxDist = std::numeric_limits<float>::max(); 
   // Check x statisfy rules for intersection
-  return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && (x.y + x.z) < 1 && 0 <= x.x);
+  return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && 0 <= x.x && (x.y + x.z) <= 1);
 }
 
 vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
@@ -170,14 +173,12 @@ vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
   vec3 v1 = triangle.v1;
   vec3 v2 = triangle.v2;
   
-  // Triangle co-ordinate system (let v0 be origin)
-  vec3 e1 = v1 - v0; // Vector parallel to edge of the triangle between v0 and v1
-  vec3 e2 = v2 - v0; // Vector parallel to edge of the triangle between v0 and v2
-  vec3 b = start - v0; // Vector parallel to edge between v0 and camara position  
+  vec3 e1 = v1 - v0;    // Vector parallel to edge of the triangle between v0 and v1
+  vec3 e2 = v2 - v0;    // Vector parallel to edge of the triangle between v0 and v2
+  vec3 b = start - v0;  // Vector parallel to edge between v0 and camara position  
 
 
   // Cramer's rule: faster than   // mat3 A( -dir, e1, e2 ); return glm::inverse( A ) * b;
-  // anticommutative
   vec3 cross_e1e2 = glm::cross(e1,e2);
   vec3 cross_be2 = glm::cross(b,e2);
   vec3 cross_e1b = glm::cross(e1,b);
@@ -197,27 +198,74 @@ vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
 
 vec3 DirectLight( const Intersection& intersection ){
   vec3 light(0.0f,0.0f,0.0f);
+  vec3 positions[100];
+  SoftShadowPositions(positions);
 
-  for (int k = 0; k < SOFT_SHADOWS_SAMPLES; k++) {  
-    // vector from point of intersection to light
-    vec3 surfaceToLight = lightPos - intersection.position;
-    // distance from point of intersection to light
-    float radius = length(surfaceToLight);
-    // vector perpendicular to plane.
-    vec3 normal = triangles[intersection.triangleIndex].normal;
-    // direct light intensity given distance
+
+
+  for (int k = 0; k < SOFT_SHADOWS_SAMPLES; k++) {
+
+
+
+    // Unit vector from point of intersection to light
+    vec3 surfaceToLight = glm::normalize(positions[k] - intersection.position);
+    // Distance from point of intersection to light
+    float radius = length(positions[k] - intersection.position);
+    // Unit vector perpendicular to plane.
+    vec3 normal = glm::normalize(triangles[intersection.triangleIndex].normal);
+    // Direct light intensity given distance/radius
     float lightIntensity = max( dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
 
     Intersection nearestTriangle;
-    ClosestIntersection(lightPos,-surfaceToLight,nearestTriangle);
+    ClosestIntersection(positions[k],-surfaceToLight,nearestTriangle);
     
     if (nearestTriangle.triangleIndex != intersection.triangleIndex){
-      lightIntensity = 0; // Zero light intensity 
+      // If intersection is closer to light source than self
+      if (nearestTriangle.distance < radius*0.99f)
+        lightIntensity = 0; // Zero light intensity 
     } 
     
-    light += lightColor * lightIntensity;
+    // ( lightColor /= (float) SOFT_SHADOWS_SAMPLES )
+
+    light += ( lightColor / (float) SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
   return light + indirectLight;
+}
+
+void SoftShadowPositions(vec3 positions[]){
+  float factor = (float) (SOFT_SHADOWS_SAMPLES - 1) / 3;
+  float shift = 0.003;
+  positions[0] = lightPos;
+
+  if(factor < 1) {
+    shift = 0.007;
+  } 
+  else if (factor < 4) {
+    shift = 0.005;
+  }
+  else if (factor < 6) {
+    shift = 0.003;
+  }
+  else if (factor < 10) {
+    shift = 0.001;
+  }
+  else {
+    cout << "Soft shadow count OVERFLOW";
+    return;
+  }
+
+  for(int i = 1; i < SOFT_SHADOWS_SAMPLES; i++) {
+    int mod = i % 3;
+    if (mod == 0){
+      positions[i] = lightPos + vec3(shift, 0, 0) * (float) (i + 1.0f); // Translate X
+    }
+    else if(mod == 1){
+      positions[i] = lightPos + vec3(0, shift, 0) * (float) i; // Translate Y
+    }
+    else {
+      positions[i] = lightPos + vec3(0, 0, shift) * (float) (i - 1.0f);  // Translate Z
+    }
+  }
 }
 
 
@@ -286,6 +334,18 @@ void Control_Camera(Uint8* keystate){
   if( keystate[SDLK_RIGHT] )
   {
     cameraRot *= rotationRight;
+  }
+  if( keystate[SDLK_UP] && keystate[SDLK_LALT] )
+  {
+    cameraRot *= rotationUp;
+  }
+  if( keystate[SDLK_DOWN] && keystate[SDLK_LALT] )
+  {
+    cameraRot *= rotationDown;
+  }
+  if( keystate[SDLK_r] && keystate[SDLK_LALT] )
+  {
+    cameraPos = vec3(0.0,0.0,-3);
   }
 }
 
