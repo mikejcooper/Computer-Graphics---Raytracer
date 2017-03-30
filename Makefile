@@ -1,4 +1,4 @@
-FILE=skeleton
+FILE=Raytracer
 
 ########
 #   Directories
@@ -14,14 +14,19 @@ CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -O3
 LIBS = 
 CC=g++
 
+
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
   # Run MacOS commands
   GLMDIR = 1
-  LIBS += -lm -framework OpenCL
+  LIBS += -lm -framework OpenCL -fopenmp -lglut
+  # LIBS += -lm -framework OpenCL 
+	CC=clang-omp++
+
 else
   # check for Linux and run other commands
-  LIBS += -lm -lOpenCL
+  # LIBS += -lm -lOpenCL -fopenmp 
+  LIBS += -lm -lOpenCL 
 endif
 
 ########
@@ -35,6 +40,12 @@ SDL_LDFLAGS := $(shell sdl-config --libs)
 #   This is the default action
 all:Build
 
+# export PATH=/install/prefix/bin:$PATH;
+# export C_INCLUDE_PATH=/install/prefix/include:/usr/local/Cellar/clang-omp/2015-04-01/libexec/include:$C_INCLUDE_PATH;
+# export CPLUS_INCLUDE_PATH=/install/prefix/include:/usr/local/Cellar/clang-omp/2015-04-01/libexec/include:$CPLUS_INCLUDE_PATH;
+# export LIBRARY_PATH=/install/prefix/lib:/usr/local/Cellar/clang-omp/2015-04-01/libexec/lib:$LIBRARY_PATH;
+# export DYLD_LIBRARY_PATH=/install/prefix/lib:/usr/local/Cellar/clang-omp/2015-04-01/libexec/lib:$DYLD_LIBRARY_PATH;
+
 
 ########
 #   Object list
@@ -44,7 +55,7 @@ OBJ = $(B_DIR)/$(FILE).o
 
 ########
 #   Objects
-$(B_DIR)/$(FILE).o : $(S_DIR)/$(FILE).cpp $(S_DIR)/SDLauxiliary.h $(S_DIR)/TestModel.h
+$(B_DIR)/$(FILE).o : $(S_DIR)/$(FILE).cpp $(S_DIR)/SDLauxiliary.h $(S_DIR)/TestModel.h $(S_DIR)/Raytracer.h
 	$(CC) $(CC_OPTS) -o $(B_DIR)/$(FILE).o $(S_DIR)/$(FILE).cpp $(SDL_CFLAGS) $(GLM_CFLAGS)
 
 

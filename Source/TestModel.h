@@ -6,10 +6,22 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+class Light
+{
+public:
+	glm::vec3 position;
+	glm::vec3 color;
+	float intensity;
+
+	Light(glm::vec3 position, glm::vec3 color, float intensity)
+	 : position(position), color(color), intensity(intensity){}
+	 Light(){}
+};
 // Used to describe a triangular surface:
 class Triangle
 {
 public:
+
 	glm::vec3 v0;
 	glm::vec3 v1;
 	glm::vec3 v2;
