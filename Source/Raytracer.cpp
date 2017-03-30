@@ -201,12 +201,7 @@ vec3 DirectLight( const Intersection& intersection ){
   vec3 positions[100];
   SoftShadowPositions(positions);
 
-
-
   for (int k = 0; k < SOFT_SHADOWS_SAMPLES; k++) {
-
-
-
     // Unit vector from point of intersection to light
     vec3 surfaceToLight = glm::normalize(positions[k] - intersection.position);
     // Distance from point of intersection to light
@@ -233,40 +228,30 @@ vec3 DirectLight( const Intersection& intersection ){
 }
 
 void SoftShadowPositions(vec3 positions[]){
-  float factor = (float) (SOFT_SHADOWS_SAMPLES - 1) / 3;
-  float shift = 0.003;
+// Set first ray projection to be at 'light position'
   positions[0] = lightPos;
+  // Settings to handle variable number of soft shadows
+  float mul3 = (float) (SOFT_SHADOWS_SAMPLES - 1) / 3;
+  float shift = (mul3 < 1) ? 0.007 : (mul3 < 4) ? 0.005 : (mul3 < 6) ? 0.003 : (mul3 < 10) ? 0.001 : 0.003 ;
 
-  if(factor < 1) {
-    shift = 0.007;
-  } 
-  else if (factor < 4) {
-    shift = 0.005;
-  }
-  else if (factor < 6) {
-    shift = 0.003;
-  }
-  else if (factor < 10) {
-    shift = 0.001;
-  }
-  else {
-    cout << "Soft shadow count OVERFLOW";
-    return;
-  }
-
+  // Find equal positions around light source 
   for(int i = 1; i < SOFT_SHADOWS_SAMPLES; i++) {
-    int mod = i % 3;
+    float sign  = (i % 6 >= 3) ? -1 : 1;            // Rays from +/- 
+    int mod = i % 3;                                // Rays from (x,y,z) 
     if (mod == 0){
-      positions[i] = lightPos + vec3(shift, 0, 0) * (float) (i + 1.0f); // Translate X
+      positions[i] = lightPos + vec3(shift, 0, 0) * sign * (float) (i + 1.0f); // Shift in X
     }
     else if(mod == 1){
-      positions[i] = lightPos + vec3(0, shift, 0) * (float) i; // Translate Y
+      positions[i] = lightPos + vec3(0, shift, 0) * sign * (float) i;          // Shift in Y
     }
     else {
-      positions[i] = lightPos + vec3(0, 0, shift) * (float) (i - 1.0f);  // Translate Z
+      positions[i] = lightPos + vec3(0, 0, shift) * sign * (float) (i - 1.0f); // Shift in Z
     }
   }
 }
+
+
+
 
 
 void Update()
