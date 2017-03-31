@@ -202,55 +202,18 @@ void SoftShadowPositions(vec3 positions[]){
 void AASampling(int pixelx, int pixely) {
   vec3 average_color(0,0,0);
   bool resample = false;
-  float step = (AA_SAMPLES < 3) ? 0.5 : 0.4;
+  float pixel_distance = 1.2;
+  float steps = 1; 
+  // float steps = (AA_SAMPLES < 3) ? 1 : 2; 
 
-  for( float k=0; ( k < 1 ) && !resample ; k+=step ){
+  
+  for( float k=0, b1=0; ( k <= pixel_distance ) && !resample ; k += (pixel_distance / steps), b1++ ){
 
-    float x1 = (true) ? pixelx + k : pixelx - k;
+    float x1 = ( (int) b1 == 0 ) ? pixelx + k : pixelx - k;
 
-    for( float m=0; ( m < 1 ) && !resample; m+=step ){ 
+    for( float m=0, b2=0; ( m <= pixel_distance ) && !resample; m += (pixel_distance / steps), b2++ ){ 
 
-      float y1 = (true) ? pixely + m : pixely - m;
-
-      vec3 current_color = traceRayFromCamera(x1, y1);
-
-      // Edge dectection using current and previous aliasing points colour difference. 
-      if ( EdgeDectection(current_color, average_color) ){
-        // resample at these points with more accuracy  
-        resample = true;
-      }
-      else if (k > 2 && !resample) {
-        screenPixels[pixelx][pixely] = (average_color + current_color) / 2.0f;
-        return;
-      } 
-
-      average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
-    }
-  }
-
-  if (SHOW_EDGES){
-      average_color = (resample) ? vec3(0,0,0) : average_color;
-  } else {
-      average_color = (resample) ? AASuperSampling(pixelx, pixely) : average_color;
-  }
-
-  screenPixels[pixelx][pixely] = average_color;
-}
-
-
-
-void AASampling1(int pixelx, int pixely) {
-  vec3 average_color(0,0,0);
-  bool resample = false;
-  float step = 0.3;
-
-  for( int k=0; ( k < AA_SAMPLES ) && !resample ; k++ ){
-
-    float x1 = (k % 2 == 0) ? pixelx + step * k : pixelx - step * k;
-
-    for( int m=0; (m < AA_SAMPLES) && !resample; m++ ){ 
-
-      float y1 = (m % 2 == 0) ? pixely + step * m : pixely - step * m;
+      float y1 = ( (int) b2 % 2 == 0 )  ? pixely + m : pixely - m;
 
       vec3 current_color = traceRayFromCamera(x1, y1);
 
@@ -259,7 +222,7 @@ void AASampling1(int pixelx, int pixely) {
         // resample at these points with more accuracy  
         resample = true;
       }
-      else if (k > 2 && !resample) {
+      else if (k > pixel_distance / steps) {
         screenPixels[pixelx][pixely] = (average_color + current_color) / 2.0f;
         return;
       } 
@@ -279,31 +242,38 @@ void AASampling1(int pixelx, int pixely) {
 
 vec3 AASuperSampling(float pixelx, float pixely){
   vec3 average_color(0,0,0);
-  float step = 0.01;
-  float step_num = AA_SAMPLES*6;
 
-  for( int k=0; k < step_num; k++ ){
+  float pixel_distance = 0.8;
+  float steps = 5;
 
-    float x1 = (k % 2 == 0) ? pixelx + step * k : pixelx - step * k;
-
-    for( int m=0; m < step_num; m++ ){ 
-
-      float y1 = (m % 2 == 0) ? pixely + step * m : pixely - step * m;
-
+  // if(AA_SAMPLES < 3){
+  //   pixel_distance = 1;
+  //   steps = 10;
+  // } else {
+  //   pixel_distance = 1.2;
+  //   steps = 15;
+  // }
+  
+  
+  for( float k=0, b1=0; ( k <= pixel_distance ) ; k += (pixel_distance / steps), b1++ ){
+    float x1 = ( (int) b1 % 2 == 0 ) ? pixelx + k : pixelx - k;
+    for( float m=0, b2=0; ( m <= pixel_distance ) ; m += (pixel_distance / steps), b2++ ){
+      float y1 = ( (int) b2 % 2 == 0 )  ? pixely + m : pixely - m;
+      
       vec3 current_color = traceRayFromCamera(x1, y1);
-
+      
       average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
-    }
+    }    
   }
   return average_color;
 }
 
 bool EdgeDectection(vec3 current_color, vec3 average_color){
-
-  float threshold = 0.03;
-
-  if ( ((current_color.z - average_color.z > threshold ) || (current_color.y - average_color.y > threshold ) || 
-        (current_color.x - average_color.x > threshold )) && average_color.x != 0){
+  float threshold = 0.06;
+  float x = abs(current_color.x - average_color.x);
+  float y = abs(current_color.y - average_color.y);
+  float z = abs(current_color.z - average_color.z);
+  if ( ( x > threshold  || y > threshold  || z > threshold  ) && average_color.x != 0){
     return true;
   }
   else {
