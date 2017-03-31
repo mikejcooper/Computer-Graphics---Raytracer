@@ -1,4 +1,7 @@
 #include "Raytracer.h"
+#include <list>
+#include <tuple>
+#include <string>
 
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
@@ -31,6 +34,7 @@ vec3    DirectLight( const Intersection& intersection );
 void    SoftShadowPositions(vec3 positions[]);
 vec3 AASampling(int pixelx, int pixely);
 vec3 AASuperSampling(float pixelx, float pixely);
+vec3 AAEdgeSampling(float pixelx, float pixely);
 vec3 traceRayFromCamera(float x , float y);
 void finish();
 
@@ -55,6 +59,7 @@ void initalise(){
   
 }
 
+list<tuple<int, int>> edges;
 
 void Draw()
 {
@@ -68,6 +73,13 @@ void Draw()
 
       PutPixelSDL( screen, x, y, pixel_color);
     }
+  }
+
+  for(tuple<int, int> i : edges) {
+    int x = get<0>(i);
+    int y = get<1>(i);
+    PutPixelSDL( screen, x, y, vec3(0,0,0));
+
   }
 
   if( SDL_MUSTLOCK(screen) )
@@ -220,14 +232,38 @@ vec3 AASampling(int pixelx, int pixely) {
     }
   }
 
+  if (resample) {
+    edges.push_back( tuple<int,int>(pixelx, pixely) );
+  }
+
   pixel_color = (resample) ? AASuperSampling(pixelx, pixely) : pixel_color;
   return pixel_color;
 }
 
+// vec3 AAEdgeSampling(float pixelx, float pixely){
+//   vec3 pixel_color(0,0,0);
+//   for( int k=0; k<AA_SAMPLES; k++ ){
+
+//     float x1 = (k % 2 == 0) ? pixelx + 0.02*k : pixelx - 0.02*k;
+
+//     for( int m=0; m<AA_SAMPLES*4; m++ ){ 
+
+//       float y1 = (m % 2 == 0) ? pixely + 0.02*m : pixely - 0.02*m;
+
+//       vec3 local_color = traceRayFromCamera(x1, y1);
+
+//       pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
+//     }
+//   }
+//   return pixel_color;
+
+// }
+
+
 vec3 AASuperSampling(float pixelx, float pixely){
   vec3 pixel_color(0,0,0);
 
-  for( int k=0; k<AA_SAMPLES*2; k++ ){
+  for( int k=0; k<AA_SAMPLES*4; k++ ){
 
     float x1 = (k % 2 == 0) ? pixelx + 0.02*k : pixelx - 0.02*k;
 
@@ -243,25 +279,6 @@ vec3 AASuperSampling(float pixelx, float pixely){
   return pixel_color;
 }
 
-// vec3 EdgeCheck(float pixelx, float pixely){
-//   vec3 pixel_color = traceRayFromCamera(x1, y1);
-
-//   for( int k=0; k<AA_SAMPLES*4; k++ ){
-
-//     float x1 = (k % 2 == 0) ? pixelx + 1 : pixelx - 1;
-
-//     for( int m=0; m<AA_SAMPLES*4; m++ ){ 
-
-//       float y1 = (m % 2 == 0) ? pixely + 1 : pixely - 1;
-
-//       vec3 local_color = traceRayFromCamera(x1, y1);
-
-
-
-//     }
-//   }
-//   return pixel_color;
-// }
 
 
 vec3 traceRayFromCamera(float x , float y) {
