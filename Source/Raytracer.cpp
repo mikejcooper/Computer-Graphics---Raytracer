@@ -1,7 +1,5 @@
 #include "Raytracer.h"
-#include <list>
-#include <tuple>
-#include <string>
+
 
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
@@ -13,6 +11,8 @@ vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
 vector<Triangle> Triangles;
+vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
+
 
 
 /* ----------------------------------------------------------------------------*/
@@ -32,10 +32,10 @@ vec3    Calculate_Intersection(Triangle triangle,vec3 start,vec3 dir);
 
 vec3    DirectLight( const Intersection& intersection );
 void    SoftShadowPositions(vec3 positions[]);
-vec3 AASampling(int pixelx, int pixely);
+void AASampling(int pixelx, int pixely);
 vec3 AASuperSampling(float pixelx, float pixely);
-vec3 AAEdgeSampling(float pixelx, float pixely);
 vec3 traceRayFromCamera(float x , float y);
+bool EdgeDectection(vec3 current_color, vec3 average_color);
 void finish();
 
 int main( int argc, char* argv[] )
@@ -44,11 +44,11 @@ int main( int argc, char* argv[] )
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
   int t = SDL_GetTicks(); // Set start value for timer.
 
-  // while( NoQuitMessageSDL() )
-  // {
+  while( NoQuitMessageSDL() )
+  {
     t = Update(t);
     Draw();
-  // }
+  }
 
   SDL_SaveBMP( screen, "screenshot1.bmp" );
   return 0;
@@ -59,7 +59,6 @@ void initalise(){
   
 }
 
-list<tuple<int, int>> edges;
 
 void Draw()
 {
@@ -69,18 +68,16 @@ void Draw()
   #pragma omp parallel for schedule(auto)
   for( int y=0; y<SCREEN_HEIGHT; y++ ) {
     for( int x=0; x<SCREEN_WIDTH; x++ ) {
-      vec3 pixel_color = AASampling(x, y);
-
-      PutPixelSDL( screen, x, y, pixel_color);
+      
+      screenPixels[x][y] = traceRayFromCamera(x, y);
+      
+      if (AA_SAMPLES > 1){
+        AASampling(x, y);
+      }      
+      PutPixelSDL( screen, x, y, screenPixels[x][y]);
     }
   }
 
-  for(tuple<int, int> i : edges) {
-    int x = get<0>(i);
-    int y = get<1>(i);
-    PutPixelSDL( screen, x, y, vec3(0,0,0));
-
-  }
 
   if( SDL_MUSTLOCK(screen) )
     SDL_UnlockSurface(screen);
@@ -170,7 +167,7 @@ vec3 DirectLight( const Intersection& intersection ){
     
     if (nearestTriangle.triangleIndex != intersection.triangleIndex){
       // If intersection is closer to light source than self
-      if (nearestTriangle.distance < radius*0.99f)
+      if (nearestTriangle.distance < radius * 0.99f)
         lightIntensity = 0; // Zero light intensity 
     } 
     
@@ -202,83 +199,117 @@ void SoftShadowPositions(vec3 positions[]){
   }
 }
 
-vec3 AASampling(int pixelx, int pixely) {
-  vec3 pixel_color(0,0,0);
+void AASampling(int pixelx, int pixely) {
+  vec3 average_color(0,0,0);
   bool resample = false;
+  float step = (AA_SAMPLES < 3) ? 0.5 : 0.4;
 
-  for( int k=0; ( k < AA_SAMPLES ) && !resample ; k++ ){
+  for( float k=0; ( k < 1 ) && !resample ; k+=step ){
 
-    float x1 = (k % 2 == 0) ? pixelx + 0.3*k : pixelx - 0.3*k;
+    float x1 = (true) ? pixelx + k : pixelx - k;
 
-    for( int m=0; (m < AA_SAMPLES) && !resample; m++ ){ 
+    for( float m=0; ( m < 1 ) && !resample; m+=step ){ 
 
-      float y1 = (m % 2 == 0) ? pixely + 0.3*m : pixely - 0.3*m;
+      float y1 = (true) ? pixely + m : pixely - m;
 
-      vec3 local_color = traceRayFromCamera(x1, y1);
-
-      float threshold = 0.03;
+      vec3 current_color = traceRayFromCamera(x1, y1);
 
       // Edge dectection using current and previous aliasing points colour difference. 
-      if ( (((local_color.z - pixel_color.z > threshold ) || (local_color.y - pixel_color.y > threshold ) || 
-            (local_color.x - pixel_color.x > threshold )) && pixel_color.x != 0) || resample){
-        cout << "HERE";
+      if ( EdgeDectection(current_color, average_color) ){
         // resample at these points with more accuracy  
         resample = true;
       }
       else if (k > 2 && !resample) {
-        return local_color;
+        screenPixels[pixelx][pixely] = (average_color + current_color) / 2.0f;
+        return;
       } 
-      pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
+
+      average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
     }
   }
 
-  if (resample) {
-    edges.push_back( tuple<int,int>(pixelx, pixely) );
+  if (SHOW_EDGES){
+      average_color = (resample) ? vec3(0,0,0) : average_color;
+  } else {
+      average_color = (resample) ? AASuperSampling(pixelx, pixely) : average_color;
   }
 
-  pixel_color = (resample) ? AASuperSampling(pixelx, pixely) : pixel_color;
-  return pixel_color;
+  screenPixels[pixelx][pixely] = average_color;
 }
 
-// vec3 AAEdgeSampling(float pixelx, float pixely){
-//   vec3 pixel_color(0,0,0);
-//   for( int k=0; k<AA_SAMPLES; k++ ){
 
-//     float x1 = (k % 2 == 0) ? pixelx + 0.02*k : pixelx - 0.02*k;
 
-//     for( int m=0; m<AA_SAMPLES*4; m++ ){ 
+void AASampling1(int pixelx, int pixely) {
+  vec3 average_color(0,0,0);
+  bool resample = false;
+  float step = 0.3;
 
-//       float y1 = (m % 2 == 0) ? pixely + 0.02*m : pixely - 0.02*m;
+  for( int k=0; ( k < AA_SAMPLES ) && !resample ; k++ ){
 
-//       vec3 local_color = traceRayFromCamera(x1, y1);
+    float x1 = (k % 2 == 0) ? pixelx + step * k : pixelx - step * k;
 
-//       pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
-//     }
-//   }
-//   return pixel_color;
+    for( int m=0; (m < AA_SAMPLES) && !resample; m++ ){ 
 
-// }
+      float y1 = (m % 2 == 0) ? pixely + step * m : pixely - step * m;
 
+      vec3 current_color = traceRayFromCamera(x1, y1);
+
+      // Edge dectection using current and previous aliasing points colour difference. 
+      if ( EdgeDectection(current_color, average_color) ){
+        // resample at these points with more accuracy  
+        resample = true;
+      }
+      else if (k > 2 && !resample) {
+        screenPixels[pixelx][pixely] = (average_color + current_color) / 2.0f;
+        return;
+      } 
+
+      average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
+    }
+  }
+
+  if (SHOW_EDGES){
+      average_color = (resample) ? vec3(0,0,0) : average_color;
+  } else {
+      average_color = (resample) ? AASuperSampling(pixelx, pixely) : average_color;
+  }
+
+  screenPixels[pixelx][pixely] = average_color;
+}
 
 vec3 AASuperSampling(float pixelx, float pixely){
-  vec3 pixel_color(0,0,0);
+  vec3 average_color(0,0,0);
+  float step = 0.01;
+  float step_num = AA_SAMPLES*6;
 
-  for( int k=0; k<AA_SAMPLES*4; k++ ){
+  for( int k=0; k < step_num; k++ ){
 
-    float x1 = (k % 2 == 0) ? pixelx + 0.02*k : pixelx - 0.02*k;
+    float x1 = (k % 2 == 0) ? pixelx + step * k : pixelx - step * k;
 
-    for( int m=0; m<AA_SAMPLES*4; m++ ){ 
+    for( int m=0; m < step_num; m++ ){ 
 
-      float y1 = (m % 2 == 0) ? pixely + 0.02*m : pixely - 0.02*m;
+      float y1 = (m % 2 == 0) ? pixely + step * m : pixely - step * m;
 
-      vec3 local_color = traceRayFromCamera(x1, y1);
+      vec3 current_color = traceRayFromCamera(x1, y1);
 
-      pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
+      average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
     }
   }
-  return pixel_color;
+  return average_color;
 }
 
+bool EdgeDectection(vec3 current_color, vec3 average_color){
+
+  float threshold = 0.03;
+
+  if ( ((current_color.z - average_color.z > threshold ) || (current_color.y - average_color.y > threshold ) || 
+        (current_color.x - average_color.x > threshold )) && average_color.x != 0){
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 
 
 vec3 traceRayFromCamera(float x , float y) {
@@ -399,6 +430,11 @@ void Control_Features(Uint8* keystate){
       MOVEMENT = (MOVEMENT) ? false : true; 
       cout << "Movement " << MOVEMENT << endl;
       while (keystate[SDLK_m]) SDL_PumpEvents();
+    }
+    if(keystate[SDLK_e]){
+      SHOW_EDGES = (SHOW_EDGES) ? false : true; 
+      cout << "Show Edges " << SHOW_EDGES << endl;
+      while (keystate[SDLK_e]) SDL_PumpEvents();
     }
     if(keystate[SDLK_q]){
       finish();
