@@ -203,13 +203,11 @@ void AASampling(int pixelx, int pixely) {
   vec3 average_color(0,0,0);
   bool resample = false;
   float pixel_distance = 1.2;
-  float steps = 1; 
-  // float steps = (AA_SAMPLES < 3) ? 1 : 2; 
-
+  float steps = 1;  // Actual steps = steps + 1 
   
   for( float k=0, b1=0; ( k <= pixel_distance ) && !resample ; k += (pixel_distance / steps), b1++ ){
 
-    float x1 = ( (int) b1 == 0 ) ? pixelx + k : pixelx - k;
+    float x1 = ( (int) b1 == 0 ) ? pixelx + k : pixelx - k;   
 
     for( float m=0, b2=0; ( m <= pixel_distance ) && !resample; m += (pixel_distance / steps), b2++ ){ 
 
@@ -253,7 +251,6 @@ vec3 AASuperSampling(float pixelx, float pixely){
   //   pixel_distance = 1.2;
   //   steps = 15;
   // }
-  
   
   for( float k=0, b1=0; ( k <= pixel_distance ) ; k += (pixel_distance / steps), b1++ ){
     float x1 = ( (int) b1 % 2 == 0 ) ? pixelx + k : pixelx - k;
