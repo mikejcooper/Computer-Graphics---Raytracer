@@ -10,7 +10,7 @@ B_DIR=Build
 EXEC=$(B_DIR)/$(FILE)
 
 # default build settings
-CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -O3 
+CC_OPTS=-std=c++11 -c -pipe -Wall -Wno-switch -ggdb -g3 -O3 
 LIBS = 
 CC=g++
 
@@ -19,7 +19,7 @@ OS := $(shell uname)
 ifeq ($(OS),Darwin)
   # Run MacOS commands
   GLMDIR = 1
-  LIBS += -lm -framework OpenCL -fopenmp -lglut
+  LIBS += -lm -framework OpenCL -fopenmp -lglut 
   # LIBS += -lm -framework OpenCL 
 	CC=clang-omp++
 

@@ -1,4 +1,8 @@
 #include "Raytracer.h"
+#include <list>
+#include <tuple>
+#include <string>
+
 
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
@@ -10,6 +14,9 @@ vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
 vector<Triangle> Triangles;
+
+list<tuple<int, int>> edges;
+
 
 
 /* ----------------------------------------------------------------------------*/
@@ -31,6 +38,9 @@ vec3    DirectLight( const Intersection& intersection );
 void    SoftShadowPositions(vec3 positions[]);
 vec3 AASampling(int pixelx, int pixely);
 vec3 traceRayFromCamera(float x , float y);
+vec3 AASuperSampling(float pixelx, float pixely);
+vec3 AAEdgeSampling(float pixelx, float pixely);
+
 void finish();
 
 int main( int argc, char* argv[] )
@@ -39,11 +49,11 @@ int main( int argc, char* argv[] )
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
   int t = SDL_GetTicks(); // Set start value for timer.
 
-  while( NoQuitMessageSDL() )
-  {
+  // while( NoQuitMessageSDL() )
+  // {
     t = Update(t);
     Draw();
-  }
+  // }
 
   SDL_SaveBMP( screen, "screenshot1.bmp" );
   return 0;
@@ -64,10 +74,17 @@ void Draw()
   for( int y=0; y<SCREEN_HEIGHT; y++ ) {
     for( int x=0; x<SCREEN_WIDTH; x++ ) {
       vec3 pixel_color = AASampling(x, y);
-
       PutPixelSDL( screen, x, y, pixel_color);
     }
   }
+
+  for(tuple<int, int> i : edges) {
+    int x = get<0>(i);
+    int y = get<1>(i);
+    PutPixelSDL( screen, x, y, vec3(0,0,0));
+
+  }
+
 
   if( SDL_MUSTLOCK(screen) )
     SDL_UnlockSurface(screen);
@@ -202,12 +219,56 @@ vec3 AASampling(int pixelx, int pixely) {
 
       vec3 local_color = traceRayFromCamera(x1, y1);
 
+      if ( ((local_color.z - pixel_color.z > 0.3 ) || (local_color.y - pixel_color.y > 0.03 ) || (local_color.x - pixel_color.x > 0.03 )) && pixel_color.x != 0){
+        cout << "HERE";
+        // resample at these points with more accuracy
+        edges.push_back( tuple<int,int>(pixelx, pixelx));
+        return vec3(0,0,0);
+      }
+      else if (k > 2){
+        return local_color;
+      } 
+      else {
+        pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
+      }
+    }
+  }
+  return pixel_color;
+}
+
+
+vec3 AAEdgeSampling(float pixelx, float pixely){
+  vec3 pixel_color(0,0,0);
+  for( int k=0; k<AA_SAMPLES; k++ ){
+    float x1 = (k % 2 == 0) ? pixelx + 0.3*k : pixelx - 0.3*k;
+    for( int m=0; m<AA_SAMPLES; m++ ){ 
+      float y1 = (m % 2 == 0) ? pixely + 0.3*m : pixely - 0.3*m;
+      // PutPixelSDL( screen, x, y, AASuperSampling(x1, y1));
+      vec3 local_color = AASuperSampling(x1, y1);
       pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
     }
   }
   return pixel_color;
 }
 
+vec3 AASuperSampling(float pixelx, float pixely){
+  vec3 pixel_color(0,0,0);
+
+  for( int k=0; k<AA_SAMPLES*4; k++ ){
+
+    float x1 = (k % 2 == 0) ? pixelx + 0.01*k : pixelx - 0.01*k;
+
+    for( int m=0; m<AA_SAMPLES*4; m++ ){ 
+
+      float y1 = (m % 2 == 0) ? pixely + 0.01*m : pixely - 0.01*m;
+
+      vec3 local_color = traceRayFromCamera(x1, y1);
+
+      pixel_color = (m == 0) ?  local_color : ( (pixel_color + local_color) / 2.0f ) ;
+    }
+  }
+  return pixel_color;
+}
 
 vec3 traceRayFromCamera(float x , float y) {
   Intersection closestIntersection;

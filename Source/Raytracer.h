@@ -25,7 +25,7 @@ struct Intersection
 
 bool MOVEMENT = true;
 int  SOFT_SHADOWS_SAMPLES = 1;
-int  AA_SAMPLES = 15;
+int  AA_SAMPLES = 8;
 
 SDL_Surface* screen;
 const int SCREEN_WIDTH = 500;
