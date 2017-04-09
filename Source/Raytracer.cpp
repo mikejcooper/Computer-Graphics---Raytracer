@@ -36,20 +36,23 @@ void AASampling(int pixelx, int pixely);
 vec3 AASuperSampling(float pixelx, float pixely);
 vec3 traceRayFromCamera(float x , float y);
 bool EdgeDectection(vec3 current_color, vec3 average_color);
+vec3 AddVectorAndAverage(vec3 A, vec3 B);
 void finish();
+
+vec3 traceDofFromCamera(float x, float y);
 
 int main( int argc, char* argv[] )
 {
   LoadTestModel( Triangles );
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
   int t = SDL_GetTicks(); // Set start value for timer.
-
+  
   while( NoQuitMessageSDL() )
   {
     t = Update(t);
     Draw();
   }
-
+  
   SDL_SaveBMP( screen, "screenshot1.bmp" );
   return 0;
 }
@@ -64,47 +67,47 @@ void Draw()
 {
   if( SDL_MUSTLOCK(screen) )
     SDL_LockSurface(screen);
-
-  #pragma omp parallel for schedule(auto)
+  
+#pragma omp parallel for schedule(auto)
   for( int y=0; y<SCREEN_HEIGHT; y++ ) {
     for( int x=0; x<SCREEN_WIDTH; x++ ) {
       
-      screenPixels[x][y] = traceRayFromCamera(x, y);
-      
-      if (AA_SAMPLES > 1){
+      if (AA_SAMPLES > 1 && x > 1 && y > 1){
         AASampling(x, y);
-      }      
+      } else {
+        screenPixels[x][y] = traceRayFromCamera(x, y);
+      }
       PutPixelSDL( screen, x, y, screenPixels[x][y]);
     }
   }
-
-
+  
+  
   if( SDL_MUSTLOCK(screen) )
     SDL_UnlockSurface(screen);
-
+  
   SDL_UpdateRect( screen, 0, 0, 0, 0 );
 }
 
 /*
-  ClosestIntersection takes the start position of the ray and its direction and a std::vector of Triangles 
-  as input. It should then check for intersection against all these Triangles. If an 
-  intersection occurred it should return true. Otherwise false. In the case of an intersection 
-  it should also return some information about the closest intersection. 
-*/
+ ClosestIntersection takes the start position of the ray and its direction and a std::vector of Triangles
+ as input. It should then check for intersection against all these Triangles. If an
+ intersection occurred it should return true. Otherwise false. In the case of an intersection
+ it should also return some information about the closest intersection.
+ */
 bool ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection ){
   bool doesIntersect = false;
   closestIntersection.distance = 50000.00;
-
+  
   // For all Triangles in model
   for(int i = 0; i < Triangles.size(); i++){
     vec3 x = Calculate_Intersection(Triangles[i], start, dir);
     if( Intersects(x))  {
       // If the current intersection is closer than previous, update
       if(closestIntersection.distance > x.x) {
-          closestIntersection.distance = x.x;
-          closestIntersection.position = start + x.x * dir;
-          closestIntersection.triangleIndex = i;
-          doesIntersect = true;
+        closestIntersection.distance = x.x;
+        closestIntersection.position = start + x.x * dir;
+        closestIntersection.triangleIndex = i;
+        doesIntersect = true;
       }
     }
   }
@@ -113,7 +116,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection
 
 bool Intersects(vec3 x){
   // Check if largest float value can hold intersection distance
-  float maxDist = std::numeric_limits<float>::max(); 
+  float maxDist = std::numeric_limits<float>::max();
   // Check x statisfy rules for intersection
   return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && 0 <= x.x && (x.y + x.z) <= 1);
 }
@@ -126,20 +129,20 @@ vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
   
   vec3 e1 = v1 - v0;    // Vector parallel to edge of the triangle between v0 and v1
   vec3 e2 = v2 - v0;    // Vector parallel to edge of the triangle between v0 and v2
-  vec3 b = start - v0;  // Vector parallel to edge between v0 and camara position  
-
-
+  vec3 b = start - v0;  // Vector parallel to edge between v0 and camara position
+  
+  
   // Cramer's rule: faster than   // mat3 A( -dir, e1, e2 ); return glm::inverse( A ) * b;
   vec3 cross_e1e2 = glm::cross(e1,e2);
   vec3 cross_be2 = glm::cross(b,e2);
   vec3 cross_e1b = glm::cross(e1,b);
-
+  
   float dot_e1e2b = glm::dot(cross_e1e2, b);
-
+  
   float dot_e1e2d = glm::dot(cross_e1e2, -dir);
   float dot_be2d =  glm::dot(cross_be2, -dir);
   float dot_e1bd =  glm::dot(cross_e1b, -dir);
-
+  
   // Point of intersection: x = (t, u, v), from v0 + ue1 + ve2 = s + td
   vec3 x = vec3(dot_e1e2b / dot_e1e2d, dot_be2d / dot_e1e2d, dot_e1bd / dot_e1e2d);
   
@@ -151,25 +154,25 @@ vec3 DirectLight( const Intersection& intersection ){
   vec3 light(0.0f,0.0f,0.0f);
   vec3 positions[100];
   SoftShadowPositions(positions);
-
+  
   for (int k = 0; k < SOFT_SHADOWS_SAMPLES; k++) {
     // Unit vector from point of intersection to light
     vec3 surfaceToLight = glm::normalize(positions[k] - intersection.position);
     // Distance from point of intersection to light
-    float radius = length(positions[k] - intersection.position);
+    float radius = glm::length(positions[k] - intersection.position);
     // Unit vector perpendicular to plane.
     vec3 normal = glm::normalize(Triangles[intersection.triangleIndex].normal);
     // Direct light intensity given distance/radius
-    float lightIntensity = max( dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
-
+    float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
+    
     Intersection nearestTriangle;
-    ClosestIntersection(positions[k],-surfaceToLight,nearestTriangle);
+    ClosestIntersection(positions[k], -surfaceToLight, nearestTriangle);
     
     if (nearestTriangle.triangleIndex != intersection.triangleIndex){
       // If intersection is closer to light source than self
       if (nearestTriangle.distance < radius * 0.99f)
-        lightIntensity = 0; // Zero light intensity 
-    } 
+        lightIntensity = 0; // Zero light intensity
+    }
     
     light += ( lightColor / (float) SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
@@ -182,11 +185,11 @@ void SoftShadowPositions(vec3 positions[]){
   // Settings to handle variable number of soft shadows
   float mul3 = (float) (SOFT_SHADOWS_SAMPLES - 1) / 3;
   float shift = (mul3 < 1) ? 0.007 : (mul3 < 4) ? 0.005 : (mul3 < 6) ? 0.004 : (mul3 < 11) ? 0.003 : 0.002 ;
-
-  // Find equal positions around light source 
+  
+  // Find equal positions around light source
   for(int i = 1; i < SOFT_SHADOWS_SAMPLES; i++) {
-    float sign  = (i % 6 >= 3) ? -1 : 1;            // Rays from +/- 
-    int mod = i % 3;                                // Rays from (x,y,z) 
+    float sign  = (i % 6 >= 3) ? -1 : 1;            // Rays from +/-
+    int mod = i % 3;                                // Rays from (x,y,z)
     if (mod == 0){
       positions[i] = lightPos + vec3(shift, 0, 0) * sign * (float) (i + 1.0f); // Shift in X
     }
@@ -200,70 +203,57 @@ void SoftShadowPositions(vec3 positions[]){
 }
 
 void AASampling(int pixelx, int pixely) {
-  vec3 average_color(0,0,0);
+  vec3 average_color = traceRayFromCamera(pixelx, pixely);
+
   bool resample = false;
-  float pixel_distance = 1.2;
-  float steps = 1;  // Actual steps = steps + 1 
+  float pixel_distance = 1;
+  float steps = 1;  // Actual steps = steps + 1
   
-  for( float k=0, b1=0; ( k <= pixel_distance ) && !resample ; k += (pixel_distance / steps), b1++ ){
-
-    float x1 = ( (int) b1 == 0 ) ? pixelx + k : pixelx - k;   
-
-    for( float m=0, b2=0; ( m <= pixel_distance ) && !resample; m += (pixel_distance / steps), b2++ ){ 
-
-      float y1 = ( (int) b2 % 2 == 0 )  ? pixely + m : pixely - m;
-
-      vec3 current_color = traceRayFromCamera(x1, y1);
-
-      // Edge dectection using current and previous aliasing points colour difference. 
+  for( float k = - pixel_distance; ( k <= pixel_distance && !resample ) ; k += (pixel_distance / steps)){
+    for( float m = - pixel_distance; ( m <= pixel_distance && !resample ) ; m += (pixel_distance / steps)){
+      
+      vec3 current_color = traceRayFromCamera(pixelx + k, pixely + m);
+      
+      // Edge dectection using current and previous aliasing points colour difference.  Resample at these points with more accuracy
       if ( EdgeDectection(current_color, average_color) ){
-        // resample at these points with more accuracy  
         resample = true;
       }
-      else if (k > pixel_distance / steps) {
+      else if (k > - pixel_distance +  pixel_distance / steps) {                // IF SECOND ITERATION OF K OCCURS
         screenPixels[pixelx][pixely] = (average_color + current_color) / 2.0f;
         return;
-      } 
-
-      average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
+      }
+      else{
+        average_color = ( average_color + current_color ) / 2.0f;
+      }
+      
     }
   }
-
+  
   if (SHOW_EDGES){
-      average_color = (resample) ? vec3(0,0,0) : average_color;
+    average_color = (resample) ? vec3(0,0,0) : average_color;
   } else {
-      average_color = (resample) ? AASuperSampling(pixelx, pixely) : average_color;
+    average_color = (resample) ? AASuperSampling(pixelx, pixely) : average_color;
   }
-
+  
   screenPixels[pixelx][pixely] = average_color;
 }
 
-vec3 AASuperSampling(float pixelx, float pixely){
-  vec3 average_color(0,0,0);
+// Sample around current edge point and take average.
+ vec3 AASuperSampling(float pixelx, float pixely){
+   vec3 average_color = traceRayFromCamera(pixelx, pixely);
 
-  float pixel_distance = 0.8;
-  float steps = 5;
+   float pixel_distance = 1;
+   float steps = 2;
 
-  // if(AA_SAMPLES < 3){
-  //   pixel_distance = 1;
-  //   steps = 10;
-  // } else {
-  //   pixel_distance = 1.2;
-  //   steps = 15;
-  // }
-  
-  for( float k=0, b1=0; ( k <= pixel_distance ) ; k += (pixel_distance / steps), b1++ ){
-    float x1 = ( (int) b1 % 2 == 0 ) ? pixelx + k : pixelx - k;
-    for( float m=0, b2=0; ( m <= pixel_distance ) ; m += (pixel_distance / steps), b2++ ){
-      float y1 = ( (int) b2 % 2 == 0 )  ? pixely + m : pixely - m;
-      
-      vec3 current_color = traceRayFromCamera(x1, y1);
-      
-      average_color = (m == 0) ?  current_color : ( (average_color + current_color) / 2.0f ) ;
-    }    
-  }
-  return average_color;
-}
+   for( float k = - pixel_distance; ( k <= pixel_distance ) ; k += (pixel_distance / steps)){
+     for( float m = - pixel_distance; ( m <= pixel_distance ) ; m += (pixel_distance / steps)){
+       
+       average_color = ( average_color + traceRayFromCamera(pixelx + k, pixely + m) ) / 2.0f;
+     }
+   }
+   return average_color;
+ }
+
 
 bool EdgeDectection(vec3 current_color, vec3 average_color){
   float threshold = 0.06;
@@ -280,6 +270,11 @@ bool EdgeDectection(vec3 current_color, vec3 average_color){
 
 
 vec3 traceRayFromCamera(float x , float y) {
+  
+  if (DOF){
+    return traceDofFromCamera(x, y);
+  }
+  
   Intersection closestIntersection;
   // Get direction of camera
   vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
@@ -291,10 +286,41 @@ vec3 traceRayFromCamera(float x , float y) {
     vec3 color = Triangles[index].color;
     vec3 lightIntensity = DirectLight(closestIntersection);
     return color * lightIntensity;
-  } 
+  }
   else {
     return vec3( 0,0,0 );
   }
+}
+
+vec3 traceDofFromCamera(float x, float y) {
+  vec3 average_color = vec3( 0,0,0 );
+  
+  for (int i = 0; i < 4; i++){
+    Intersection closestIntersection;
+    // Get direction of camera
+    vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
+    direction = direction * cameraRot;
+    
+    float shift = 0.01;
+    vec3 local_cameraPos = (i % 2 == 0) ? vec3(cameraPos.x + shift, cameraPos.y + shift, cameraPos.z + shift) : vec3(cameraPos.x - shift, cameraPos.y - shift, cameraPos.z - shift);
+    
+    // If ray casting from camera position hits a triangle
+    if(ClosestIntersection(local_cameraPos, direction, closestIntersection)) {
+      // Identify triangle, find colour and 'Put' corrisponding pixel
+      int index = closestIntersection.triangleIndex;
+      vec3 color = Triangles[index].color;
+      vec3 lightIntensity = DirectLight(closestIntersection);
+      average_color = (i == 0) ? color * lightIntensity : AddVectorAndAverage(average_color, color * lightIntensity);
+    }
+    else {
+      return vec3( 0,0,0 );
+    }
+  }
+  return average_color ;
+}
+
+vec3 AddVectorAndAverage(vec3 A, vec3 B) {
+  return vec3( A.x + B.x ,  A.y + B.y , A.z + B.z ) / 2.0f;
 }
 
 
@@ -326,7 +352,7 @@ void Control_LightSource(Uint8* keystate){
   vec3 translateX = vec3(0.1,0  ,0);
   vec3 translateY = vec3(0  ,0.1,0);
   vec3 translateZ = vec3(0  ,0  ,0.1);
-
+  
   if( keystate[SDLK_w] ) {
     lightPos += translateZ;
   }
@@ -349,7 +375,7 @@ void Control_LightSource(Uint8* keystate){
 
 void Control_Camera(Uint8* keystate){
   if( keystate[SDLK_UP] ) {
-      vec3 translateForward = vec3(0,0,0.1);
+    vec3 translateForward = vec3(0,0,0.1);
     cameraPos += translateForward * cameraRot;
   }
   if( keystate[SDLK_DOWN] ) {
@@ -394,14 +420,19 @@ void Control_Features(Uint8* keystate){
       while (keystate[SDLK_MINUS]) SDL_PumpEvents();
     }
     if(keystate[SDLK_m]){
-      MOVEMENT = (MOVEMENT) ? false : true; 
+      MOVEMENT = (MOVEMENT) ? false : true;
       cout << "Movement " << MOVEMENT << endl;
       while (keystate[SDLK_m]) SDL_PumpEvents();
     }
     if(keystate[SDLK_e]){
-      SHOW_EDGES = (SHOW_EDGES) ? false : true; 
+      SHOW_EDGES = (SHOW_EDGES) ? false : true;
       cout << "Show Edges " << SHOW_EDGES << endl;
       while (keystate[SDLK_e]) SDL_PumpEvents();
+    }
+    if(keystate[SDLK_d]){
+      DOF = (DOF) ? false : true;
+      cout << "Show Depth of Field " << DOF << endl;
+      while (keystate[SDLK_d]) SDL_PumpEvents();
     }
     if(keystate[SDLK_q]){
       finish();

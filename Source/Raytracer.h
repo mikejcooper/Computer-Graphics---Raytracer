@@ -27,6 +27,7 @@ bool MOVEMENT = true;
 int  SOFT_SHADOWS_SAMPLES = 1;
 int  AA_SAMPLES = 1;
 bool SHOW_EDGES = false;
+bool DOF = false;
 
 SDL_Surface* screen;
 const int SCREEN_WIDTH = 500;
