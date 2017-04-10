@@ -15,6 +15,8 @@ vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 
 
+
+
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS   */
 
@@ -39,7 +41,7 @@ bool EdgeDectection(vec3 current_color, vec3 average_color);
 vec3 AddVectorAndAverage(vec3 A, vec3 B);
 void finish();
 
-vec3 traceDofFromCamera(float x, float y);
+vec3 traceDofFromCamera(int x, int y);
 
 int main( int argc, char* argv[] )
 {
@@ -77,10 +79,28 @@ void Draw()
       } else {
         screenPixels[x][y] = traceRayFromCamera(x, y);
       }
+      
       PutPixelSDL( screen, x, y, screenPixels[x][y]);
     }
   }
   
+  for( int y=0; y<SCREEN_HEIGHT; y++ ) {
+    for( int x=0; x<SCREEN_WIDTH; x++ ) {
+      
+      if (DOF_VALUE > 1){
+        traceDofFromCamera(x, y);
+      }
+    }
+  }
+  
+  
+  for( int y=0; y<SCREEN_HEIGHT; y++ ) {
+    for( int x=0; x<SCREEN_WIDTH; x++ ) {
+      
+      PutPixelSDL( screen, x, y, screenPixels[x][y]);
+    }
+  }
+
   
   if( SDL_MUSTLOCK(screen) )
     SDL_UnlockSurface(screen);
@@ -146,6 +166,7 @@ vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
   // Point of intersection: x = (t, u, v), from v0 + ue1 + ve2 = s + td
   vec3 x = vec3(dot_e1e2b / dot_e1e2d, dot_be2d / dot_e1e2d, dot_e1bd / dot_e1e2d);
   
+  
   return x;
 }
 
@@ -206,8 +227,8 @@ void AASampling(int pixelx, int pixely) {
   vec3 average_color = traceRayFromCamera(pixelx, pixely);
 
   bool resample = false;
-  float pixel_distance = 1;
-  float steps = 1;  // Actual steps = steps + 1
+  float pixel_distance = 1;    // -1 <= x/y <= 1
+  float steps = 1;             // Step between -1 and 1 in steps of 1/1.
   
   for( float k = - pixel_distance; ( k <= pixel_distance && !resample ) ; k += (pixel_distance / steps)){
     for( float m = - pixel_distance; ( m <= pixel_distance && !resample ) ; m += (pixel_distance / steps)){
@@ -242,8 +263,8 @@ void AASampling(int pixelx, int pixely) {
  vec3 AASuperSampling(float pixelx, float pixely){
    vec3 average_color = traceRayFromCamera(pixelx, pixely);
 
-   float pixel_distance = 1;
-   float steps = 2;
+   float pixel_distance = 1;    // -1 <= x/y <= 1
+   float steps = 2;             // Step between -1 and 1 in steps of 1/2.
 
    for( float k = - pixel_distance; ( k <= pixel_distance ) ; k += (pixel_distance / steps)){
      for( float m = - pixel_distance; ( m <= pixel_distance ) ; m += (pixel_distance / steps)){
@@ -270,11 +291,6 @@ bool EdgeDectection(vec3 current_color, vec3 average_color){
 
 
 vec3 traceRayFromCamera(float x , float y) {
-  
-  if (DOF){
-    return traceDofFromCamera(x, y);
-  }
-  
   Intersection closestIntersection;
   // Get direction of camera
   vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
@@ -292,31 +308,93 @@ vec3 traceRayFromCamera(float x , float y) {
   }
 }
 
-vec3 traceDofFromCamera(float x, float y) {
+
+
+vec3 traceDofFromCamera(int x, int y) {
   vec3 average_color = vec3( 0,0,0 );
+  vec3 lightIntensity = vec3( 0,0,0 );
+  
+  Intersection closestIntersection_xy;
+  vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
+  direction = direction * cameraRot;
+  ClosestIntersection(cameraPos, direction, closestIntersection_xy);
+  int index = closestIntersection_xy.triangleIndex;
+  vec3 color = Triangles[index].color;
+  lightIntensity = DirectLight(closestIntersection_xy);
+  
+  
+  int DOF_KERNEL_SIZE = 8;
+  
+  float totalPixels = DOF_KERNEL_SIZE * DOF_KERNEL_SIZE;
+  
+  
+  // Start from top left of kernel
+  for(int y1 = ceil(- DOF_KERNEL_SIZE / 2.0f); y1 < ceil(DOF_KERNEL_SIZE / 2.0f); y1++)
+  {
+    for(int x1 = ceil(- DOF_KERNEL_SIZE / 2.0f); x1 < ceil(DOF_KERNEL_SIZE / 2.0f); x1++)
+    {
+      float weighting = 1.0f / totalPixels;
+      if(y1 == 0 && x1 == 0)
+        weighting = 1 - (min(abs(closestIntersection_xy.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
+      else
+        weighting = min(abs(closestIntersection_xy.distance), 1.0f) * (1.0f / totalPixels);
+      
+      // Add contribution to final pixel colour
+      average_color += screenPixels[x+x1][y+y1] * weighting;
+    }
+  }
+  
+  screenPixels[x][y] = average_color;
+  
+  return vec3(0,0,0);
+}
+
+
+vec3 traceDofFromCamera1(float x, float y) {
+  vec3 average_color = vec3( 0,0,0 );
+  vec3 lightIntensity = vec3( 0,0,0 );
+  
+  int DOF_KERNEL_SIZE = 2;
+  
+  float totalPixels = DOF_KERNEL_SIZE * DOF_KERNEL_SIZE;
+  
   
   for (int i = 0; i < 4; i++){
+    
+    
     Intersection closestIntersection;
     // Get direction of camera
     vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
     direction = direction * cameraRot;
     
-    float shift = 0.01;
-    vec3 local_cameraPos = (i % 2 == 0) ? vec3(cameraPos.x + shift, cameraPos.y + shift, cameraPos.z + shift) : vec3(cameraPos.x - shift, cameraPos.y - shift, cameraPos.z - shift);
+    float shift = 0.001 * DOF_VALUE;
+    
+    vec3 local_cameraPos = vec3(cameraPos.x + shift, cameraPos.y, cameraPos.z);
+    
+    if (i == 1){
+      local_cameraPos = vec3(cameraPos.x - shift, cameraPos.y, cameraPos.z);
+    }
+    else if (i == 2){
+      local_cameraPos = vec3(cameraPos.x, cameraPos.y + shift, cameraPos.z);
+    }
+    else if (i == 3) {
+      local_cameraPos = vec3(cameraPos.x, cameraPos.y - shift, cameraPos.z);
+    }
     
     // If ray casting from camera position hits a triangle
     if(ClosestIntersection(local_cameraPos, direction, closestIntersection)) {
       // Identify triangle, find colour and 'Put' corrisponding pixel
       int index = closestIntersection.triangleIndex;
       vec3 color = Triangles[index].color;
-      vec3 lightIntensity = DirectLight(closestIntersection);
-      average_color = (i == 0) ? color * lightIntensity : AddVectorAndAverage(average_color, color * lightIntensity);
+      lightIntensity = DirectLight(closestIntersection);
+      float weighting = 1 - (min(abs(closestIntersection.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
+      average_color += color * weighting;
     }
     else {
       return vec3( 0,0,0 );
     }
   }
-  return average_color ;
+  return average_color * lightIntensity / 4.0f;
 }
 
 vec3 AddVectorAndAverage(vec3 A, vec3 B) {
@@ -419,6 +497,14 @@ void Control_Features(Uint8* keystate){
       AA_SAMPLES_DEC();
       while (keystate[SDLK_MINUS]) SDL_PumpEvents();
     }
+    if(keystate[SDLK_d] && keystate[SDLK_EQUALS] ){
+      DOF_SAMPLES_INC();
+      while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
+    }
+    if(keystate[SDLK_d] && keystate[SDLK_MINUS] ){
+      DOF_SAMPLES_DEC();
+      while (keystate[SDLK_MINUS]) SDL_PumpEvents();
+    }
     if(keystate[SDLK_m]){
       MOVEMENT = (MOVEMENT) ? false : true;
       cout << "Movement " << MOVEMENT << endl;
@@ -429,11 +515,11 @@ void Control_Features(Uint8* keystate){
       cout << "Show Edges " << SHOW_EDGES << endl;
       while (keystate[SDLK_e]) SDL_PumpEvents();
     }
-    if(keystate[SDLK_d]){
-      DOF = (DOF) ? false : true;
-      cout << "Show Depth of Field " << DOF << endl;
-      while (keystate[SDLK_d]) SDL_PumpEvents();
-    }
+//    if(keystate[SDLK_d]){
+//      DOF = (DOF) ? false : true;
+//      cout << "Show Depth of Field " << DOF << endl;
+//      while (keystate[SDLK_d]) SDL_PumpEvents();
+//    }
     if(keystate[SDLK_q]){
       finish();
     }
