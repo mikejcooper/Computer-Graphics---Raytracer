@@ -41,7 +41,7 @@ bool EdgeDectection(vec3 current_color, vec3 average_color);
 vec3 AddVectorAndAverage(vec3 A, vec3 B);
 void finish();
 
-vec3 traceDofFromCamera(int x, int y);
+void Calculate_DOF();
 
 int main( int argc, char* argv[] )
 {
@@ -84,14 +84,12 @@ void Draw()
     }
   }
   
-  for( int y=4; y<SCREEN_HEIGHT-4; y++ ) {
-    for( int x=4; x<SCREEN_WIDTH-4; x++ ) {
-      
-      if (DOF_VALUE > 1){
-        traceDofFromCamera(x, y);
-      }
-    }
+  
+  
+  if (DOF_VALUE > 1){
+    Calculate_DOF();
   }
+  
   
   
   for( int y=0; y<SCREEN_HEIGHT; y++ ) {
@@ -100,7 +98,7 @@ void Draw()
       PutPixelSDL( screen, x, y, screenPixels[x][y]);
     }
   }
-
+  
   
   if( SDL_MUSTLOCK(screen) )
     SDL_UnlockSurface(screen);
@@ -225,7 +223,7 @@ void SoftShadowPositions(vec3 positions[]){
 
 void AASampling(int pixelx, int pixely) {
   vec3 average_color = traceRayFromCamera(pixelx, pixely);
-
+  
   bool resample = false;
   float pixel_distance = 1;    // -1 <= x/y <= 1
   float steps = 1;             // Step between -1 and 1 in steps of 1/1.
@@ -260,20 +258,20 @@ void AASampling(int pixelx, int pixely) {
 }
 
 // Sample around current edge point and take average.
- vec3 AASuperSampling(float pixelx, float pixely){
-   vec3 average_color = traceRayFromCamera(pixelx, pixely);
-
-   float pixel_distance = 1;    // -1 <= x/y <= 1
-   float steps = 2;             // Step between -1 and 1 in steps of 1/2.
-
-   for( float k = - pixel_distance; ( k <= pixel_distance ) ; k += (pixel_distance / steps)){
-     for( float m = - pixel_distance; ( m <= pixel_distance ) ; m += (pixel_distance / steps)){
-       
-       average_color = ( average_color + traceRayFromCamera(pixelx + k, pixely + m) ) / 2.0f;
-     }
-   }
-   return average_color;
- }
+vec3 AASuperSampling(float pixelx, float pixely){
+  vec3 average_color = traceRayFromCamera(pixelx, pixely);
+  
+  float pixel_distance = 1;    // -1 <= x/y <= 1
+  float steps = 2;             // Step between -1 and 1 in steps of 1/2.
+  
+  for( float k = - pixel_distance; ( k <= pixel_distance ) ; k += (pixel_distance / steps)){
+    for( float m = - pixel_distance; ( m <= pixel_distance ) ; m += (pixel_distance / steps)){
+      
+      average_color = ( average_color + traceRayFromCamera(pixelx + k, pixely + m) ) / 2.0f;
+    }
+  }
+  return average_color;
+}
 
 
 bool EdgeDectection(vec3 current_color, vec3 average_color){
@@ -310,48 +308,47 @@ vec3 traceRayFromCamera(float x , float y) {
 
 
 
-vec3 traceDofFromCamera(int x, int y) {
-  vec3 average_color = vec3( 0,0,0 );
-  
-  Intersection closestIntersection_xy;
-  vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
-  direction = direction * cameraRot;
-  ClosestIntersection(cameraPos, direction, closestIntersection_xy);
-  
+void Calculate_DOF() {
   
   int DOF_KERNEL_SIZE = 8;
-  
   float totalPixels = DOF_KERNEL_SIZE * DOF_KERNEL_SIZE;
+  int trim = DOF_KERNEL_SIZE/2;
   
-  
-  // Start from top left of kernel
-  for(int y1 = ceil(- DOF_KERNEL_SIZE / 2.0f); y1 < ceil(DOF_KERNEL_SIZE / 2.0f); y1++)
-  {
-    for(int x1 = ceil(- DOF_KERNEL_SIZE / 2.0f); x1 < ceil(DOF_KERNEL_SIZE / 2.0f); x1++)
-    {
-      float weighting = 1.0f / totalPixels;
+  for( int y=trim; y<SCREEN_HEIGHT-trim; y++ ) {
+    for( int x=trim; x<SCREEN_WIDTH-trim; x++ ) {
       
-//      float distance_metric = abs(closestIntersection_xy.distance * 100000 - FOCAL_LENGTH);
+      vec3 average_color = vec3( 0,0,0 );
       
-      float shift = 0.05 * DOF_VALUE;
-
-      float distance_metric = abs(closestIntersection_xy.distance * 10) + shift;
+      Intersection closestIntersection_xy;
+      vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
+      direction = direction * cameraRot;
+      ClosestIntersection(cameraPos, direction, closestIntersection_xy);
       
-      if(y1 == 0 && x1 == 0)
-        weighting = 1 - (min(distance_metric, 1.0f) * ((totalPixels - 1) / totalPixels) );
-      else
-        weighting =      min(distance_metric, 1.0f) * (1.0f / totalPixels);
+      // Start from top left of kernel
+      for(int y1 = ceil(- DOF_KERNEL_SIZE / 2.0f); y1 < ceil(DOF_KERNEL_SIZE / 2.0f); y1++)
+      {
+        for(int x1 = ceil(- DOF_KERNEL_SIZE / 2.0f); x1 < ceil(DOF_KERNEL_SIZE / 2.0f); x1++)
+        {
+          float weighting = 1.0f / totalPixels;
+          
+          //      float distance_metric = abs(closestIntersection_xy.distance * 100000 - FOCAL_LENGTH);
+          
+          float distance_metric = abs(closestIntersection_xy.distance * 30 * DOF_VALUE);
+          
+          if(y1 == 0 && x1 == 0)
+            weighting = 1 - (min(distance_metric, 1.0f) * ((totalPixels - 1) / totalPixels) );
+          else
+            weighting =      min(distance_metric, 1.0f) * (1.0f / totalPixels);
+          
+          // Add contribution to final pixel colour
+          average_color += screenPixels[x+x1][y+y1] * weighting;
+        }
+      }
       
-      // Add contribution to final pixel colour
-      average_color += screenPixels[x+x1][y+y1] * weighting;
+      screenPixels[x][y] = average_color;
+      
     }
   }
-  
-  screenPixels[x][y] = average_color;
-  
-//  cout << abs(closestIntersection_xy.distance - FOCAL_LENGTH) <<endl;
-  
-  return vec3(0,0,0);
 }
 
 
@@ -520,11 +517,11 @@ void Control_Features(Uint8* keystate){
       cout << "Show Edges " << SHOW_EDGES << endl;
       while (keystate[SDLK_e]) SDL_PumpEvents();
     }
-//    if(keystate[SDLK_d]){
-//      DOF = (DOF) ? false : true;
-//      cout << "Show Depth of Field " << DOF << endl;
-//      while (keystate[SDLK_d]) SDL_PumpEvents();
-//    }
+    //    if(keystate[SDLK_d]){
+    //      DOF = (DOF) ? false : true;
+    //      cout << "Show Depth of Field " << DOF << endl;
+    //      while (keystate[SDLK_d]) SDL_PumpEvents();
+    //    }
     if(keystate[SDLK_q]){
       finish();
     }
