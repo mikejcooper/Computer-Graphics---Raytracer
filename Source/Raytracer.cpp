@@ -84,8 +84,8 @@ void Draw()
     }
   }
   
-  for( int y=0; y<SCREEN_HEIGHT; y++ ) {
-    for( int x=0; x<SCREEN_WIDTH; x++ ) {
+  for( int y=4; y<SCREEN_HEIGHT-4; y++ ) {
+    for( int x=4; x<SCREEN_WIDTH-4; x++ ) {
       
       if (DOF_VALUE > 1){
         traceDofFromCamera(x, y);
@@ -334,10 +334,16 @@ vec3 traceDofFromCamera(int x, int y) {
     for(int x1 = ceil(- DOF_KERNEL_SIZE / 2.0f); x1 < ceil(DOF_KERNEL_SIZE / 2.0f); x1++)
     {
       float weighting = 1.0f / totalPixels;
+      
+//      if(y1 == 0 && x1 == 0)
+//        weighting = 1 - (min(abs(closestIntersection_xy.distance - FOCAL_LENGTH), 1.0f) * ((totalPixels - 1) / totalPixels) );
+//      else
+//        weighting = min(abs(closestIntersection_xy.distance - FOCAL_LENGTH), 1.0f) * (1.0f / totalPixels);
+//      
       if(y1 == 0 && x1 == 0)
-        weighting = 1 - (min(abs(closestIntersection_xy.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
+        weighting = 1 - (totalPixels - 1) / totalPixels ;
       else
-        weighting = min(abs(closestIntersection_xy.distance), 1.0f) * (1.0f / totalPixels);
+        weighting = (1.0f / totalPixels);
       
       // Add contribution to final pixel colour
       average_color += screenPixels[x+x1][y+y1] * weighting;
@@ -345,6 +351,8 @@ vec3 traceDofFromCamera(int x, int y) {
   }
   
   screenPixels[x][y] = average_color;
+  
+//  cout << abs(closestIntersection_xy.distance - FOCAL_LENGTH) <<endl;
   
   return vec3(0,0,0);
 }
