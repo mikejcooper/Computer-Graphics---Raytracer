@@ -312,15 +312,11 @@ vec3 traceRayFromCamera(float x , float y) {
 
 vec3 traceDofFromCamera(int x, int y) {
   vec3 average_color = vec3( 0,0,0 );
-  vec3 lightIntensity = vec3( 0,0,0 );
   
   Intersection closestIntersection_xy;
   vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
   direction = direction * cameraRot;
   ClosestIntersection(cameraPos, direction, closestIntersection_xy);
-  int index = closestIntersection_xy.triangleIndex;
-  vec3 color = Triangles[index].color;
-  lightIntensity = DirectLight(closestIntersection_xy);
   
   
   int DOF_KERNEL_SIZE = 8;
@@ -335,15 +331,16 @@ vec3 traceDofFromCamera(int x, int y) {
     {
       float weighting = 1.0f / totalPixels;
       
-//      if(y1 == 0 && x1 == 0)
-//        weighting = 1 - (min(abs(closestIntersection_xy.distance - FOCAL_LENGTH), 1.0f) * ((totalPixels - 1) / totalPixels) );
-//      else
-//        weighting = min(abs(closestIntersection_xy.distance - FOCAL_LENGTH), 1.0f) * (1.0f / totalPixels);
-//      
+//      float distance_metric = abs(closestIntersection_xy.distance * 100000 - FOCAL_LENGTH);
+      
+      float shift = 0.05 * DOF_VALUE;
+
+      float distance_metric = abs(closestIntersection_xy.distance * 10) + shift;
+      
       if(y1 == 0 && x1 == 0)
-        weighting = 1 - (totalPixels - 1) / totalPixels ;
+        weighting = 1 - (min(distance_metric, 1.0f) * ((totalPixels - 1) / totalPixels) );
       else
-        weighting = (1.0f / totalPixels);
+        weighting =      min(distance_metric, 1.0f) * (1.0f / totalPixels);
       
       // Add contribution to final pixel colour
       average_color += screenPixels[x+x1][y+y1] * weighting;
