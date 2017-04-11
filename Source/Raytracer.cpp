@@ -10,12 +10,22 @@ vec3  lightPos( 0, -0.5, -0.7 );
 vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
+
+
 vector<Object> Objects;
 vector<Triangle> Triangles;
 vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 int MAX_BOUNCES = 8;
+// Minimal weight a ray must have to be refracted or reflected
+const float MIN_RAY_WEIGHT = 0.0001f;
+const vec3 VOID_COLOR(0.75, 0.75, 0.75);
 
+
+/* Materials */
+float AIR_REFRACTIVE_INDEX = 1.0;
+float GLASS_REFRACTIVE_INDEX = 1.52;
+float DIFFUSE_SPECULAR_REFLECTION = 0.18;
 
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS   */
@@ -41,7 +51,9 @@ bool    EdgeDectection(vec3 current_color, vec3 average_color);
 vec3    AddVectorAndAverage(vec3 A, vec3 B);
 void    finish();
 void    Calculate_DOF();
-bool getColor(vec3 &color, vec3 dir, int BOUNCES, vec3 start);
+//bool getColor(vec3 &color, vec3 dir, int BOUNCES, vec3 start);
+bool getColor(const vec3& start, const vec3& dir, int startObjIdx, vec3& color, int bounces, float refractiveIndice, float weight);
+
 
 int main( int argc, char* argv[] )
 {
@@ -313,7 +325,11 @@ vec3 traceRayFromCamera(float x , float y) {
   direction = direction * cameraRot;
   // If ray casting from camera position hits a triangle
   
-  getColor(color, direction, 0, cameraPos);
+  
+  // Trace a ray and retrieve the pixel color of the intersected object, after illumination and reflection bounces
+//  getColor(cameraPos, d_ray, NOT_STARTOBJIDX, color, 0, AIR_REFRACTIVE_INDEX, 1.0f, rank);
+  getColor(cameraPos, direction, -1, color, 0, AIR_REFRACTIVE_INDEX, 1.0f);
+
   
   return color;
   
@@ -340,67 +356,121 @@ void getReflectedDirection(const vec3& incident, const vec3& normal, vec3& refle
   reflected = incident - normal * (2 * glm::dot(incident, normal));
 }
 
+/* Initialize the reflected and refracted vectors according to the incident vector,
+ * the object normal (updated if same direction) and the material indices (i1 current, i2 next)
+ * refractionPercentage is initialized to the percentage of light refracted
+ * Return true if there is a refraction (and reflection), false otherwise (total internal reflection)
+ */
+bool getReflectionRefractionDirections(float i1, float i2, const vec3& incident, vec3& normal, vec3& reflected, vec3& refracted, float* refractionPercentage) {
+  float cosI = glm::dot(incident, normal);
+  if (cosI > 0) {
+    // Incident and normal have the same direction, ray is inside the material
+    normal = -normal;
+  }
+  else {
+    // Incident and normal have opposite directions, so the ray is outside the material
+    cosI = -cosI;
+  }
+  
+  float eta = i1 / i2;
+  float cs2 = 1.0f - eta * eta * (1 - cosI * cosI);
+  
+  getReflectedDirection(incident, normal, reflected);
+  
+  if (cs2 < 0) {
+    // Total internal reflection
+    return false;
+  }
+  
+  *refractionPercentage = cs2;
+  
+  // Refraction
+  refracted = glm::normalize(eta * incident + (eta * cosI - sqrt(cs2)) * normal);
+  return true;
+}
 
+//bool getColor(const vec3& start, const vec3& d_ray, int startObjIdx, vec3& color, int bounce, float refractiveIndice, float weight) {
 
-bool getColor(vec3 &color, vec3 dir, int BOUNCES, vec3 start){
+  
+bool getColor(const vec3& start, const vec3& dir, int startObjIdx, vec3& color, int bounces, float refractiveIndice, float weight){
   Intersection closestIntersection;
+  
+//  if (weight < MIN_RAY_WEIGHT) {
+//    color = VOID_COLOR;
+//    return false;
+//  }
   
   // Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
   if(ClosestIntersection(start, dir, closestIntersection)) {
     // Identify triangle and object
     int objectIndex = closestIntersection.triangleIndex.first;
     int triangleIndex = closestIntersection.triangleIndex.second;
+    vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
     
-    if (BOUNCES < MAX_BOUNCES) {
-      
-      
-      if (Objects[objectIndex].material == Material::Glass && BOUNCES < MAX_BOUNCES) {
-        color = vec3(1,1,1);
-//        vec3 reflected, refracted, normal;
-        vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
-        
-        
-//        vec3 next_ray;
-//        getReflectedDirection(dir, normal, next_ray);
-        
-        float dotProduct = -2*dot(dir,normal);
-        vec3 reflectionDir = (dotProduct*normal) + dir;
-        color += 0.6f*color;
-        getColor(color, reflectionDir, BOUNCES+1, closestIntersection.position);
-        
-        vec3 refractionDir = getRefractionRay(1.1, normalize(normal), normalize(dir));
-        color += 0.9f*color;
-        getColor(color, refractionDir, BOUNCES+1, closestIntersection.position);
-        
-      }
-      else {
-        // Normal
-        vec3 col = Objects[objectIndex].triangles[triangleIndex].color;
-        color = col * DirectLight(closestIntersection);
-      }
-      
-      
-      
-//      // Reflection
-//      if (surfaces[i].reflection > 0) {
-//        float dotProduct = -2*dot(dir,N);
-//        vec3 reflectionDir = (dotProduct*N) + dir;
-//        color += surfaces[i].reflection*findColor(intersection.position, reflectionDir, depth+1);
-//      }
-//      
-//      // Refraction
-//      if (surfaces[i].reflection > 0) {
-//        vec3 refractionDir = getRefractionRay(1.1, normalize(N), normalize(dir));
-//        color += surfaces[i].refraction*findColor(intersection.position, refractionDir, depth+1);
-//      }
-      
+    // Light source hit
+    if (closestIntersection.position == lightPos) {
+      color = lightColor;
+      return true;
+    }
+    
+    // Specular material (reflection) and max number of bounces not reached
+    if (Objects[objectIndex].material == Material::Specular && bounces < MAX_BOUNCES) {
+      vec3 next_ray;
+      getReflectedDirection(dir, normal, next_ray);
+      return getColor(closestIntersection.position, next_ray, objectIndex, color, bounces + 1, refractiveIndice, weight);
     }
 
-    return true;
+    // Glass material (refraction)
+    if (Objects[objectIndex].material == Material::Glass && bounces < MAX_BOUNCES) {
+      vec3 reflected, refracted;
+      float nextRefractiveIndice, refractionPercentage;
+      
+      if (refractiveIndice == AIR_REFRACTIVE_INDEX) {
+        // Incident material is air
+        nextRefractiveIndice = GLASS_REFRACTIVE_INDEX;
+      }
+      else {
+        // Incident material is glass
+        nextRefractiveIndice = AIR_REFRACTIVE_INDEX;
+      }
+      
+      
+      // Compute the reflected and refracted vector direction and percentage
+      if (getReflectionRefractionDirections(refractiveIndice, nextRefractiveIndice, dir, normal, reflected, refracted, &refractionPercentage)) {
+        // Refraction
+        vec3 refractionColor;
+        bool b1 = getColor(closestIntersection.position, refracted, objectIndex, color, bounces + 1, nextRefractiveIndice, weight * refractionPercentage);
+        bool b2 = getColor(closestIntersection.position, reflected, objectIndex, refractionColor, bounces + 1, nextRefractiveIndice, weight * (1 - refractionPercentage));
+        
+        color = refractionPercentage * color + (1 - refractionPercentage) * refractionColor;
+        return b1 || b2;
+      }
+      
+      // Reflection caused by an angle between the incident ray and the normal higher than the critical angle (internal total reflection)
+      return getColor(closestIntersection.position, reflected, objectIndex, color, bounces + 1, refractiveIndice, weight);
+    }
+    
+    // Diffuse and specular material
+    else if (Objects[objectIndex].material == Material::DiffuseSpecular && bounces < MAX_BOUNCES) {
+      // Material color
+      color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
+      vec3 next_ray, color2;
+      getReflectedDirection(dir, normal, next_ray);
+      // Reflection color
+      getColor(closestIntersection.position, next_ray, objectIndex, color2, bounces + 1, refractiveIndice, weight * DIFFUSE_SPECULAR_REFLECTION);
+      color = (1 - DIFFUSE_SPECULAR_REFLECTION) * color + DIFFUSE_SPECULAR_REFLECTION * color2;
+      return true;
+    }
+    // Diffuse material
+    // Compute light color according to illumination and material reflectance
+    else{
+      color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
+      return true;
+    }
   }
   // No Intersection
   else {
-    color = vec3( 0,0,0 );
+    color = VOID_COLOR;
     return false;
   }
 }

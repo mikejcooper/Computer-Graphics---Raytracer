@@ -12,6 +12,7 @@ using namespace glm;
 #include "Material.h"
 
 
+
 struct Vertex
 {
   glm::vec3 position;
@@ -250,7 +251,7 @@ void LoadTestModel( std::vector<Object>& Objects )
   triangles.push_back( Triangle( C, B, A, green ) );
   triangles.push_back( Triangle( C, D, B, green ) );
 
-  StoreAsObject(triangles, Objects, Material::Glass);
+  StoreAsObject(triangles, Objects, Material::Specular);
   triangles.clear();
 
 
