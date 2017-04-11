@@ -49,8 +49,16 @@ bool getColor(vec3 &color, vec3 dir);
 
 int main( int argc, char* argv[] )
 {
-  LoadGenericmodel(Objects);
-  // LoadTestModel( Triangles );
+//  LoadGenericmodel(Objects);
+   LoadTestModel( Triangles );
+  
+  Object tmp_obj;
+   for(int i = 0; i < Triangles.size(); i++){
+    tmp_obj.triangles.push_back(Triangles[i]);
+   }
+  Objects.push_back(tmp_obj);
+  
+  
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
   int t = SDL_GetTicks(); // Set start value for timer.
   
