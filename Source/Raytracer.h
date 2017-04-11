@@ -1,10 +1,10 @@
 #include <iostream>
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
 #include <SDL.h>
 #include "SDLauxiliary.h"
 #include "TestModel.h"
 #include <limits.h>
-#include <glm/gtc/type_ptr.hpp>
+#include "glm/gtc/type_ptr.hpp"
 #include <math.h>
 
 using namespace std;
@@ -15,9 +15,9 @@ using glm::mat3;
 /* STRUCTURES                                                           */
 struct Intersection
 {
-    glm::vec3 position;
-    float distance;
-    int triangleIndex;
+  glm::vec3 position;
+  float distance;
+  std::pair <int, int> triangleIndex;
 };
 
 /* ----------------------------------------------------------------------------*/
@@ -26,6 +26,7 @@ struct Intersection
 bool MOVEMENT = true;
 int  SOFT_SHADOWS_SAMPLES = 1;
 int  AA_SAMPLES = 1;
+int DOF_VALUE = 1;
 bool SHOW_EDGES = false;
 bool DOF = false;
 
@@ -54,7 +55,7 @@ float   max(float a,float b);
 
 void SOFT_SHADOWS_SAMPLES_INC(){
   if(SOFT_SHADOWS_SAMPLES + 6 < 32) {
-    SOFT_SHADOWS_SAMPLES += 6; 
+    SOFT_SHADOWS_SAMPLES += 6;
   }
   else {
     SOFT_SHADOWS_SAMPLES = 31;
@@ -64,7 +65,7 @@ void SOFT_SHADOWS_SAMPLES_INC(){
 
 void SOFT_SHADOWS_SAMPLES_DEC(){
   if(SOFT_SHADOWS_SAMPLES - 6 > 1) {
-    SOFT_SHADOWS_SAMPLES -= 6; 
+    SOFT_SHADOWS_SAMPLES -= 6;
   }
   else {
     SOFT_SHADOWS_SAMPLES = 1;
@@ -74,7 +75,7 @@ void SOFT_SHADOWS_SAMPLES_DEC(){
 
 void AA_SAMPLES_INC(){
   if(AA_SAMPLES + 1 < 30) {
-    AA_SAMPLES += 1; 
+    AA_SAMPLES += 1;
   }
   else {
     AA_SAMPLES = 30;
@@ -84,12 +85,32 @@ void AA_SAMPLES_INC(){
 
 void AA_SAMPLES_DEC(){
   if(AA_SAMPLES - 1 > 1) {
-    AA_SAMPLES -= 1; 
+    AA_SAMPLES -= 1;
   }
   else {
     AA_SAMPLES = 1;
   }
   cout << "Anti-Aliasing sampling = " << AA_SAMPLES << endl;
+}
+
+void DOF_SAMPLES_INC(){
+  if(DOF_VALUE + 1 < 30) {
+    DOF_VALUE += 1;
+  }
+  else {
+    DOF_VALUE = 30;
+  }
+  cout << "Depth of Field Value = " << DOF_VALUE << endl;
+}
+
+void DOF_SAMPLES_DEC(){
+  if(DOF_VALUE - 1 > 1) {
+    DOF_VALUE -= 1;
+  }
+  else {
+    DOF_VALUE = 1;
+  }
+  cout << "Depth of Field Value = " << DOF_VALUE << endl;
 }
 
 float max(float a,float b){

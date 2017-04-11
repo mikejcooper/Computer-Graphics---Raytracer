@@ -4,12 +4,13 @@
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
-vec3  cameraPos(0.0,0.0,-3);
+vec3  cameraPos(0.0,0.0,-2.0);
 mat3  cameraRot(1.0);
-vec3  lightPos( 0, -0.5, -0.7 );
+vec3  lightPos( 0, -0.1, 0.0 );
 vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
+vector<Object> Objects;
 vector<Triangle> Triangles;
 vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
@@ -43,9 +44,13 @@ void finish();
 
 void Calculate_DOF();
 
+bool getColor(vec3 &color, vec3 dir);
+
+
 int main( int argc, char* argv[] )
 {
-  LoadTestModel( Triangles );
+  LoadGenericmodel(Objects);
+  // LoadTestModel( Triangles );
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
   int t = SDL_GetTicks(); // Set start value for timer.
   
@@ -116,16 +121,18 @@ bool ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection
   bool doesIntersect = false;
   closestIntersection.distance = 50000.00;
   
-  // For all Triangles in model
-  for(int i = 0; i < Triangles.size(); i++){
-    vec3 x = Calculate_Intersection(Triangles[i], start, dir);
-    if( Intersects(x))  {
-      // If the current intersection is closer than previous, update
-      if(closestIntersection.distance > x.x) {
-        closestIntersection.distance = x.x;
-        closestIntersection.position = start + x.x * dir;
-        closestIntersection.triangleIndex = i;
-        doesIntersect = true;
+  //Extract the triangle information from the mesh, and draw the triangle
+  for( int i=0; i< Objects.size(); ++i ) {
+    for (int j = 0; j < Objects[i].triangles.size(); ++j) {
+      vec3 x = Calculate_Intersection(Objects[i].triangles[j], start, dir);
+      if( Intersects(x))  {
+        // If the current intersection is closer than previous, update
+        if(closestIntersection.distance > x.x) {
+          closestIntersection.distance = x.x;
+          closestIntersection.position = start + x.x * dir;
+          closestIntersection.triangleIndex = make_pair(i,j);
+          doesIntersect = true;
+        }
       }
     }
   }
@@ -141,6 +148,7 @@ bool Intersects(vec3 x){
 
 vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
   // vi represents the vertices of the triangle
+  // vector<Vertex> getVerticesOfTriangle(triangle){
   vec3 v0 = triangle.v0;
   vec3 v1 = triangle.v1;
   vec3 v2 = triangle.v2;
@@ -173,6 +181,8 @@ vec3 DirectLight( const Intersection& intersection ){
   vec3 light(0.0f,0.0f,0.0f);
   vec3 positions[100];
   SoftShadowPositions(positions);
+  int objectIndex = intersection.triangleIndex.first;
+  int triangleIndex = intersection.triangleIndex.second;
   
   for (int k = 0; k < SOFT_SHADOWS_SAMPLES; k++) {
     // Unit vector from point of intersection to light
@@ -180,14 +190,16 @@ vec3 DirectLight( const Intersection& intersection ){
     // Distance from point of intersection to light
     float radius = glm::length(positions[k] - intersection.position);
     // Unit vector perpendicular to plane.
-    vec3 normal = glm::normalize(Triangles[intersection.triangleIndex].normal);
+    Triangle triangle = Objects[objectIndex].triangles[triangleIndex];
+    vec3 normal = glm::normalize(triangle.normal);
     // Direct light intensity given distance/radius
     float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
     
     Intersection nearestTriangle;
     ClosestIntersection(positions[k], -surfaceToLight, nearestTriangle);
-    
-    if (nearestTriangle.triangleIndex != intersection.triangleIndex){
+    int nearestTriangleObjectIndex = nearestTriangle.triangleIndex.first;
+    int nearestTriangleTriangleIndex = nearestTriangle.triangleIndex.second;
+    if (objectIndex != nearestTriangleObjectIndex && triangleIndex != nearestTriangleTriangleIndex){
       // If intersection is closer to light source than self
       if (nearestTriangle.distance < radius * 0.99f)
         lightIntensity = 0; // Zero light intensity
@@ -289,23 +301,37 @@ bool EdgeDectection(vec3 current_color, vec3 average_color){
 
 
 vec3 traceRayFromCamera(float x , float y) {
-  Intersection closestIntersection;
+  vec3 color = vec3(0,0,0);
   // Get direction of camera
   vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
   direction = direction * cameraRot;
   // If ray casting from camera position hits a triangle
-  if(ClosestIntersection(cameraPos, direction, closestIntersection)) {
-    // Identify triangle, find colour and 'Put' corrisponding pixel
-    int index = closestIntersection.triangleIndex;
-    vec3 color = Triangles[index].color;
-    vec3 lightIntensity = DirectLight(closestIntersection);
-    return color * lightIntensity;
-  }
-  else {
-    return vec3( 0,0,0 );
-  }
+  
+  getColor(color, direction);
+  
+  return color;
+  
 }
 
+
+bool getColor(vec3 &color, vec3 dir){
+  Intersection closestIntersection;
+  
+  // Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
+  if(ClosestIntersection(cameraPos, dir, closestIntersection)) {
+    // Identify triangle, find colour and 'Put' corrisponding pixel
+    int objectindex = closestIntersection.triangleIndex.first;
+    int triangleindex = closestIntersection.triangleIndex.second;
+    vec3 col = Objects[objectindex].triangles[triangleindex].color;
+    vec3 lightIntensity = DirectLight(closestIntersection);
+    color = col * lightIntensity;
+  }
+  else {
+    color = vec3( 0,0,0 );
+  }
+  
+  return true;
+}
 
 
 void Calculate_DOF() {
@@ -336,9 +362,9 @@ void Calculate_DOF() {
           float distance_metric = abs(closestIntersection_xy.distance * 30 * DOF_VALUE);
           
           if(y1 == 0 && x1 == 0)
-            weighting = 1 - (min(distance_metric, 1.0f) * ((totalPixels - 1) / totalPixels) );
+            weighting = 1 - (std::min(distance_metric, 1.0f) * ((totalPixels - 1) / totalPixels) );
           else
-            weighting =      min(distance_metric, 1.0f) * (1.0f / totalPixels);
+            weighting =      std::min(distance_metric, 1.0f) * (1.0f / totalPixels);
           
           // Add contribution to final pixel colour
           average_color += screenPixels[x+x1][y+y1] * weighting;
@@ -386,10 +412,11 @@ vec3 traceDofFromCamera1(float x, float y) {
     // If ray casting from camera position hits a triangle
     if(ClosestIntersection(local_cameraPos, direction, closestIntersection)) {
       // Identify triangle, find colour and 'Put' corrisponding pixel
-      int index = closestIntersection.triangleIndex;
-      vec3 color = Triangles[index].color;
+      int objectindex = closestIntersection.triangleIndex.first;
+      int triangleindex = closestIntersection.triangleIndex.second;
+      vec3 color = Objects[objectindex].triangles[triangleindex].color;
       lightIntensity = DirectLight(closestIntersection);
-      float weighting = 1 - (min(abs(closestIntersection.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
+      float weighting = 1 - (std::min(abs(closestIntersection.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
       average_color += color * weighting;
     }
     else {
