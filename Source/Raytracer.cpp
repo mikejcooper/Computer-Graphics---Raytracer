@@ -1,71 +1,10 @@
 #include "Raytracer.h"
 
-
-/* ----------------------------------------------------------------------------*/
-/* GLOBAL VARIABLES                                                            */
-
-vec3  cameraPos(0.0,0.0,-3);
-mat3  cameraRot(1.0);
-vec3  lightPos( 0, -0.5, -0.7 );
-vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
-vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
-
-
-
-vector<Object> Objects;
-vector<Triangle> Triangles;
-vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
-
-int MAX_BOUNCES = 8;
-// Minimal weight a ray must have to be refracted or reflected
-const float MIN_RAY_WEIGHT = 0.0001f;
-const vec3 VOID_COLOR(0.75, 0.75, 0.75);
-
-
-/* Materials */
-float AIR_REFRACTIVE_INDEX = 1.0;
-float GLASS_REFRACTIVE_INDEX = 1.52;
-float DIFFUSE_SPECULAR_REFLECTION = 0.18;
-
-/* ----------------------------------------------------------------------------*/
-/* FUNCTIONS   */
-
-void    Control();
-void    Control_LightSource(Uint8* keystate);
-void    Control_Camera(Uint8* keystate);
-void    Control_Features(Uint8* keystate);
-
-int    Update(int t);
-void    Draw();
-
-bool    Intersects(vec3 x);
-bool    ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection );
-vec3    Calculate_Intersection(Triangle triangle,vec3 start,vec3 dir);
-
-vec3    DirectLight( const Intersection& intersection );
-void    SoftShadowPositions(vec3 positions[]);
-void    AASampling(int pixelx, int pixely);
-vec3    AASuperSampling(float pixelx, float pixely);
-vec3    traceRayFromCamera(float x , float y);
-bool    EdgeDectection(vec3 current_color, vec3 average_color);
-vec3    AddVectorAndAverage(vec3 A, vec3 B);
-void    finish();
-void    Calculate_DOF();
-//bool getColor(vec3 &color, vec3 dir, int BOUNCES, vec3 start);
-bool getColor(const vec3& start, const vec3& dir, int startObjIdx, vec3& color, int bounces, float refractiveIndice, float weight);
-
-
 int main( int argc, char* argv[] )
 {
   //  LoadGenericmodel(Objects);
-  
   LoadTestModel( Objects );
-//  Object tmp_obj;
-//  for(int i = 0; i < Triangles.size(); i++){
-//    tmp_obj.triangles.push_back(Triangles[i]);
-//  }
-//  tmp_obj.material = Material::Glass;
-//  Objects.push_back(tmp_obj);
+
   
   
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
@@ -134,7 +73,7 @@ void Draw()
  intersection occurred it should return true. Otherwise false. In the case of an intersection
  it should also return some information about the closest intersection.
  */
-bool ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection ){
+bool ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection, int objectIndex){
   bool doesIntersect = false;
   closestIntersection.distance = 50000.00;
   
@@ -142,7 +81,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection
   for( int i=0; i< Objects.size(); ++i ) {
     for (int j = 0; j < Objects[i].triangles.size(); ++j) {
       vec3 x = Calculate_Intersection(Objects[i].triangles[j], start, dir);
-      if( Intersects(x))  {
+      if(i != objectIndex && Intersects(x))  {
         // If the current intersection is closer than previous, update
         if(closestIntersection.distance > x.x) {
           closestIntersection.distance = x.x;
@@ -214,7 +153,7 @@ vec3 DirectLight( const Intersection& intersection ){
     float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
     
     Intersection nearestTriangle;
-    ClosestIntersection(positions[k], -surfaceToLight, nearestTriangle);
+    ClosestIntersection(positions[k], -surfaceToLight, nearestTriangle, NULLobjectIndex);
     int nearestTriangleObjectIndex = nearestTriangle.triangleIndex.first;
     int nearestTriangleTriangleIndex = nearestTriangle.triangleIndex.second;
     if (objectIndex != nearestTriangleObjectIndex || triangleIndex != nearestTriangleTriangleIndex){
@@ -319,20 +258,11 @@ bool EdgeDectection(vec3 current_color, vec3 average_color){
 
 
 vec3 traceRayFromCamera(float x , float y) {
-  vec3 color = vec3(0,0,0);
   // Get direction of camera
   vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
   direction = direction * cameraRot;
-  // If ray casting from camera position hits a triangle
   
-  
-  // Trace a ray and retrieve the pixel color of the intersected object, after illumination and reflection bounces
-//  getColor(cameraPos, d_ray, NOT_STARTOBJIDX, color, 0, AIR_REFRACTIVE_INDEX, 1.0f, rank);
-  getColor(cameraPos, direction, -1, color, 0, AIR_REFRACTIVE_INDEX, 1.0f);
-
-  
-  return color;
-  
+  return getColor(cameraPos, direction, 0, NULLobjectIndex);
 }
 
 vec3 getRefractionRay(float nr, vec3 N, vec3 V) {
@@ -351,128 +281,78 @@ vec3 getRefractionRay(float nr, vec3 N, vec3 V) {
   
 }
 
-/* Initialize the reflected vector according to the incident vector and object normal */
-void getReflectedDirection(const vec3& incident, const vec3& normal, vec3& reflected) {
-  reflected = incident - normal * (2 * glm::dot(incident, normal));
+vec3 GetReflectedDirection (const vec3& direction, const vec3& normal)
+{
+  float dotProduct = glm::dot(normal,direction);
+  return direction - (2.0f * normal * dotProduct);
 }
 
-/* Initialize the reflected and refracted vectors according to the incident vector,
- * the object normal (updated if same direction) and the material indices (i1 current, i2 next)
- * refractionPercentage is initialized to the percentage of light refracted
- * Return true if there is a refraction (and reflection), false otherwise (total internal reflection)
- */
-bool getReflectionRefractionDirections(float i1, float i2, const vec3& incident, vec3& normal, vec3& reflected, vec3& refracted, float* refractionPercentage) {
-  float cosI = glm::dot(incident, normal);
-  if (cosI > 0) {
-    // Incident and normal have the same direction, ray is inside the material
-    normal = -normal;
-  }
-  else {
-    // Incident and normal have opposite directions, so the ray is outside the material
-    cosI = -cosI;
+vec3 GetRefractedDirection (const vec3& vec, const vec3& normal, float refractionIndex)
+{
+  float nr;
+  vec3 nNormal;
+  if (glm::dot(normal,vec) < 0.0f) {    // Going into.
+    nr = 1.0 / refractionIndex;
+    nNormal = normal;
+  } else {            // Coming out from.
+    nr = refractionIndex;
+    nNormal = -1.0f * normal;
   }
   
-  float eta = i1 / i2;
-  float cs2 = 1.0f - eta * eta * (1 - cosI * cosI);
+  float cosAlpha = -glm::dot(nNormal,vec);
   
-  getReflectedDirection(incident, normal, reflected);
-  
-  if (cs2 < 0) {
-    // Total internal reflection
-    return false;
+  float a = 1.0 - nr*nr * (1.0 - (cosAlpha * cosAlpha));
+  if (a >= 0.0) {
+    return nr * vec + (nr * cosAlpha - sqrt (a)) * nNormal;
+  } else {
+    return GetReflectedDirection (vec, nNormal);
   }
-  
-  *refractionPercentage = cs2;
-  
-  // Refraction
-  refracted = glm::normalize(eta * incident + (eta * cosI - sqrt(cs2)) * normal);
-  return true;
 }
 
-//bool getColor(const vec3& start, const vec3& d_ray, int startObjIdx, vec3& color, int bounce, float refractiveIndice, float weight) {
-
-  
-bool getColor(const vec3& start, const vec3& dir, int startObjIdx, vec3& color, int bounces, float refractiveIndice, float weight){
+vec3 getColor(const vec3& start, const vec3& dir, int depth, int sourceObjIndex){
   Intersection closestIntersection;
+  vec3 color = vec3(0,0,0);
   
-//  if (weight < MIN_RAY_WEIGHT) {
-//    color = VOID_COLOR;
-//    return false;
-//  }
+  
   
   // Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
-  if(ClosestIntersection(start, dir, closestIntersection)) {
-    // Identify triangle and object
+  if(ClosestIntersection(start, dir, closestIntersection, sourceObjIndex)) {
+  // Identify triangle and object
     int objectIndex = closestIntersection.triangleIndex.first;
     int triangleIndex = closestIntersection.triangleIndex.second;
     vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
     
-    // Light source hit
-    if (closestIntersection.position == lightPos) {
-      color = lightColor;
-      return true;
+    if(depth > 4){
+      return vec3(5,5,0);
     }
     
-    // Specular material (reflection) and max number of bounces not reached
-    if (Objects[objectIndex].material == Material::Specular && bounces < MAX_BOUNCES) {
-      vec3 next_ray;
-      getReflectedDirection(dir, normal, next_ray);
-      return getColor(closestIntersection.position, next_ray, objectIndex, color, bounces + 1, refractiveIndice, weight);
+    // Glass material (refraction)
+    if (Objects[objectIndex].material == Material::Glass) {
+      
+      vec3 reflectedDirection = GetReflectedDirection (dir, normal);
+      vec3 reflectedColor = getColor (closestIntersection.position, reflectedDirection, depth + 1, objectIndex);
+      color += reflectedColor * 0.8f;
+      
+      float transparency = 0.5f;
+      float refractionIndex = 1.1f;
+      color = color * (1.0f - transparency);
+      
+      vec3 refractedDirection = GetRefractedDirection (dir, normal, refractionIndex);
+      vec3 refractedColor = getColor (closestIntersection.position, refractedDirection, depth + 1, objectIndex);
+      color += refractedColor * transparency;
+      
     }
 
-    // Glass material (refraction)
-    if (Objects[objectIndex].material == Material::Glass && bounces < MAX_BOUNCES) {
-      vec3 reflected, refracted;
-      float nextRefractiveIndice, refractionPercentage;
-      
-      if (refractiveIndice == AIR_REFRACTIVE_INDEX) {
-        // Incident material is air
-        nextRefractiveIndice = GLASS_REFRACTIVE_INDEX;
-      }
-      else {
-        // Incident material is glass
-        nextRefractiveIndice = AIR_REFRACTIVE_INDEX;
-      }
-      
-      
-      // Compute the reflected and refracted vector direction and percentage
-      if (getReflectionRefractionDirections(refractiveIndice, nextRefractiveIndice, dir, normal, reflected, refracted, &refractionPercentage)) {
-        // Refraction
-        vec3 refractionColor;
-        bool b1 = getColor(closestIntersection.position, refracted, objectIndex, color, bounces + 1, nextRefractiveIndice, weight * refractionPercentage);
-        bool b2 = getColor(closestIntersection.position, reflected, objectIndex, refractionColor, bounces + 1, nextRefractiveIndice, weight * (1 - refractionPercentage));
-        
-        color = refractionPercentage * color + (1 - refractionPercentage) * refractionColor;
-        return b1 || b2;
-      }
-      
-      // Reflection caused by an angle between the incident ray and the normal higher than the critical angle (internal total reflection)
-      return getColor(closestIntersection.position, reflected, objectIndex, color, bounces + 1, refractiveIndice, weight);
-    }
-    
-    // Diffuse and specular material
-    else if (Objects[objectIndex].material == Material::DiffuseSpecular && bounces < MAX_BOUNCES) {
-      // Material color
-      color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
-      vec3 next_ray, color2;
-      getReflectedDirection(dir, normal, next_ray);
-      // Reflection color
-      getColor(closestIntersection.position, next_ray, objectIndex, color2, bounces + 1, refractiveIndice, weight * DIFFUSE_SPECULAR_REFLECTION);
-      color = (1 - DIFFUSE_SPECULAR_REFLECTION) * color + DIFFUSE_SPECULAR_REFLECTION * color2;
-      return true;
-    }
-    // Diffuse material
-    // Compute light color according to illumination and material reflectance
     else{
       color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
-      return true;
     }
   }
   // No Intersection
   else {
-    color = VOID_COLOR;
-    return false;
+    color = vec3(1,0,0);
   }
+  
+  return color;
 }
 
 
@@ -490,7 +370,7 @@ void Calculate_DOF() {
       Intersection closestIntersection_xy;
       vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
       direction = direction * cameraRot;
-      ClosestIntersection(cameraPos, direction, closestIntersection_xy);
+      ClosestIntersection(cameraPos, direction, closestIntersection_xy, NULLobjectIndex);
       
       // Start from top left of kernel
       for(int y1 = ceil(- DOF_KERNEL_SIZE / 2.0f); y1 < ceil(DOF_KERNEL_SIZE / 2.0f); y1++)
@@ -552,7 +432,7 @@ vec3 traceDofFromCamera1(float x, float y) {
     }
     
     // If ray casting from camera position hits a triangle
-    if(ClosestIntersection(local_cameraPos, direction, closestIntersection)) {
+    if(ClosestIntersection(local_cameraPos, direction, closestIntersection, NULLobjectIndex)) {
       // Identify triangle, find colour and 'Put' corrisponding pixel
       int objectindex = closestIntersection.triangleIndex.first;
       int triangleindex = closestIntersection.triangleIndex.second;
