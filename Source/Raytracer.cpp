@@ -4,9 +4,9 @@
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
-vec3  cameraPos(0.0,0.0,-2.0);
+vec3  cameraPos(0.0,0.0,-3);
 mat3  cameraRot(1.0);
-vec3  lightPos( 0, -0.1, 0.0 );
+vec3  lightPos( 0, -0.5, -0.7 );
 vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
@@ -14,6 +14,7 @@ vector<Object> Objects;
 vector<Triangle> Triangles;
 vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
+int MAX_BOUNCES = 8;
 
 
 /* ----------------------------------------------------------------------------*/
@@ -40,19 +41,19 @@ bool    EdgeDectection(vec3 current_color, vec3 average_color);
 vec3    AddVectorAndAverage(vec3 A, vec3 B);
 void    finish();
 void    Calculate_DOF();
-bool    getColor(vec3 &color, vec3 dir);
-
+bool getColor(vec3 &color, vec3 dir, int BOUNCES, vec3 start);
 
 int main( int argc, char* argv[] )
 {
-//  LoadGenericmodel(Objects);
+  //  LoadGenericmodel(Objects);
   
-  LoadTestModel( Triangles );
-  Object tmp_obj;
-   for(int i = 0; i < Triangles.size(); i++){
-    tmp_obj.triangles.push_back(Triangles[i]);
-   }
-  Objects.push_back(tmp_obj);
+  LoadTestModel( Objects );
+//  Object tmp_obj;
+//  for(int i = 0; i < Triangles.size(); i++){
+//    tmp_obj.triangles.push_back(Triangles[i]);
+//  }
+//  tmp_obj.material = Material::Glass;
+//  Objects.push_back(tmp_obj);
   
   
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
@@ -204,7 +205,7 @@ vec3 DirectLight( const Intersection& intersection ){
     ClosestIntersection(positions[k], -surfaceToLight, nearestTriangle);
     int nearestTriangleObjectIndex = nearestTriangle.triangleIndex.first;
     int nearestTriangleTriangleIndex = nearestTriangle.triangleIndex.second;
-    if (objectIndex != nearestTriangleObjectIndex && triangleIndex != nearestTriangleTriangleIndex){
+    if (objectIndex != nearestTriangleObjectIndex || triangleIndex != nearestTriangleTriangleIndex){
       // If intersection is closer to light source than self
       if (nearestTriangle.distance < radius * 0.99f)
         lightIntensity = 0; // Zero light intensity
@@ -312,30 +313,96 @@ vec3 traceRayFromCamera(float x , float y) {
   direction = direction * cameraRot;
   // If ray casting from camera position hits a triangle
   
-  getColor(color, direction);
+  getColor(color, direction, 0, cameraPos);
   
   return color;
   
 }
 
+vec3 getRefractionRay(float nr, vec3 N, vec3 V) {
+  //cout << dot(N,V) << "\n";
+  //cout << dot(N,V)/(N.length()*V.length()) << "\n";
+  
+  
+  float I = -dot( N, V );
+  float n = 1/nr;
+  float cosTheta = 1.0f - n * n * (1.0f - I * I);
+  vec3 T = (n * V) + (n * I - sqrt(cosTheta)) * N;
+  //cout << "T=" << T.x << ", " << T.y << "\n";
+  //cout << "theta_i=" << thetai << ", theta_t=" << thetat << "\n";
+  
+  return T;
+  
+}
 
-bool getColor(vec3 &color, vec3 dir){
+/* Initialize the reflected vector according to the incident vector and object normal */
+void getReflectedDirection(const vec3& incident, const vec3& normal, vec3& reflected) {
+  reflected = incident - normal * (2 * glm::dot(incident, normal));
+}
+
+
+
+bool getColor(vec3 &color, vec3 dir, int BOUNCES, vec3 start){
   Intersection closestIntersection;
   
   // Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
-  if(ClosestIntersection(cameraPos, dir, closestIntersection)) {
-    // Identify triangle, find colour and 'Put' corrisponding pixel
-    int objectindex = closestIntersection.triangleIndex.first;
-    int triangleindex = closestIntersection.triangleIndex.second;
-    vec3 col = Objects[objectindex].triangles[triangleindex].color;
-    vec3 lightIntensity = DirectLight(closestIntersection);
-    color = col * lightIntensity;
+  if(ClosestIntersection(start, dir, closestIntersection)) {
+    // Identify triangle and object
+    int objectIndex = closestIntersection.triangleIndex.first;
+    int triangleIndex = closestIntersection.triangleIndex.second;
+    
+    if (BOUNCES < MAX_BOUNCES) {
+      
+      
+      if (Objects[objectIndex].material == Material::Glass && BOUNCES < MAX_BOUNCES) {
+        color = vec3(1,1,1);
+//        vec3 reflected, refracted, normal;
+        vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
+        
+        
+//        vec3 next_ray;
+//        getReflectedDirection(dir, normal, next_ray);
+        
+        float dotProduct = -2*dot(dir,normal);
+        vec3 reflectionDir = (dotProduct*normal) + dir;
+        color += 0.6f*color;
+        getColor(color, reflectionDir, BOUNCES+1, closestIntersection.position);
+        
+        vec3 refractionDir = getRefractionRay(1.1, normalize(normal), normalize(dir));
+        color += 0.9f*color;
+        getColor(color, refractionDir, BOUNCES+1, closestIntersection.position);
+        
+      }
+      else {
+        // Normal
+        vec3 col = Objects[objectIndex].triangles[triangleIndex].color;
+        color = col * DirectLight(closestIntersection);
+      }
+      
+      
+      
+//      // Reflection
+//      if (surfaces[i].reflection > 0) {
+//        float dotProduct = -2*dot(dir,N);
+//        vec3 reflectionDir = (dotProduct*N) + dir;
+//        color += surfaces[i].reflection*findColor(intersection.position, reflectionDir, depth+1);
+//      }
+//      
+//      // Refraction
+//      if (surfaces[i].reflection > 0) {
+//        vec3 refractionDir = getRefractionRay(1.1, normalize(N), normalize(dir));
+//        color += surfaces[i].refraction*findColor(intersection.position, refractionDir, depth+1);
+//      }
+      
+    }
+
+    return true;
   }
+  // No Intersection
   else {
     color = vec3( 0,0,0 );
+    return false;
   }
-  
-  return true;
 }
 
 

@@ -3,9 +3,11 @@
 #include <SDL.h>
 #include "SDLauxiliary.h"
 #include "TestModel.h"
+#include "Material.h"
 #include <limits.h>
 #include "glm/gtc/type_ptr.hpp"
 #include <math.h>
+
 
 using namespace std;
 using glm::vec3;
