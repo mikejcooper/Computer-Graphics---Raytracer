@@ -16,8 +16,6 @@ vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 
 
-
-
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS   */
 
@@ -35,23 +33,21 @@ vec3    Calculate_Intersection(Triangle triangle,vec3 start,vec3 dir);
 
 vec3    DirectLight( const Intersection& intersection );
 void    SoftShadowPositions(vec3 positions[]);
-void AASampling(int pixelx, int pixely);
-vec3 AASuperSampling(float pixelx, float pixely);
-vec3 traceRayFromCamera(float x , float y);
-bool EdgeDectection(vec3 current_color, vec3 average_color);
-vec3 AddVectorAndAverage(vec3 A, vec3 B);
-void finish();
-
-void Calculate_DOF();
-
-bool getColor(vec3 &color, vec3 dir);
+void    AASampling(int pixelx, int pixely);
+vec3    AASuperSampling(float pixelx, float pixely);
+vec3    traceRayFromCamera(float x , float y);
+bool    EdgeDectection(vec3 current_color, vec3 average_color);
+vec3    AddVectorAndAverage(vec3 A, vec3 B);
+void    finish();
+void    Calculate_DOF();
+bool    getColor(vec3 &color, vec3 dir);
 
 
 int main( int argc, char* argv[] )
 {
 //  LoadGenericmodel(Objects);
-   LoadTestModel( Triangles );
   
+  LoadTestModel( Triangles );
   Object tmp_obj;
    for(int i = 0; i < Triangles.size(); i++){
     tmp_obj.triangles.push_back(Triangles[i]);
@@ -197,8 +193,9 @@ vec3 DirectLight( const Intersection& intersection ){
     vec3 surfaceToLight = glm::normalize(positions[k] - intersection.position);
     // Distance from point of intersection to light
     float radius = glm::length(positions[k] - intersection.position);
-    // Unit vector perpendicular to plane.
+    
     Triangle triangle = Objects[objectIndex].triangles[triangleIndex];
+    // Unit vector perpendicular to plane.
     vec3 normal = glm::normalize(triangle.normal);
     // Direct light intensity given distance/radius
     float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
