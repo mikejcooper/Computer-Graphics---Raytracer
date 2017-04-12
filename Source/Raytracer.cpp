@@ -1,5 +1,114 @@
 #include "Raytracer.h"
 
+namespace Controls
+{
+  
+  void Control_LightSource(Uint8* keystate){
+    vec3 translateX = vec3(0.1,0  ,0);
+    vec3 translateY = vec3(0  ,0.1,0);
+    vec3 translateZ = vec3(0  ,0  ,0.1);
+    
+    if( keystate[SDLK_w] ) {
+      lightPos += translateZ;
+    }
+    if( keystate[SDLK_s] ) {
+      lightPos -= translateZ;
+    }
+    if( keystate[SDLK_a] ) {
+      lightPos -= translateX;
+    }
+    if( keystate[SDLK_d] ) {
+      lightPos += translateX;
+    }
+    if( keystate[SDLK_q] ) {
+      lightPos += translateY;
+    }
+    if( keystate[SDLK_e] ) {
+      lightPos -= translateY;
+    }
+  }
+  
+  void Control_Camera(Uint8* keystate){
+    if( keystate[SDLK_UP] ) {
+      vec3 translateForward = vec3(0,0,0.1);
+      cameraPos += translateForward * cameraRot;
+    }
+    if( keystate[SDLK_DOWN] ) {
+      vec3 translateForward = vec3(0,0,0.1);
+      cameraPos -= translateForward * cameraRot;
+    }
+    if( keystate[SDLK_LEFT] ) {
+      cameraRot *= rotationLeft;
+    }
+    if( keystate[SDLK_RIGHT] ) {
+      cameraRot *= rotationRight;
+    }
+    if( keystate[SDLK_UP] && keystate[SDLK_RALT] ) {
+      cameraRot *= rotationUp;
+    }
+    if( keystate[SDLK_DOWN] && keystate[SDLK_RALT] ) {
+      cameraRot *= rotationDown;
+    }
+    if( keystate[SDLK_r] && keystate[SDLK_RALT] ) {
+      cameraPos = vec3(0.0,0.0,-3);
+    }
+  }
+  
+  
+  void Control_Features(Uint8* keystate){
+    while(keystate[SDLK_LALT]) {
+      SDL_PumpEvents(); // update key state array
+      if(keystate[SDLK_s] && keystate[SDLK_EQUALS] ){
+        SOFT_SHADOWS_SAMPLES_INC();
+        while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_s] && keystate[SDLK_MINUS] ){
+        SOFT_SHADOWS_SAMPLES_DEC();
+        while (keystate[SDLK_MINUS]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_a] && keystate[SDLK_EQUALS] ){
+        AA_SAMPLES_INC();
+        while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_a] && keystate[SDLK_MINUS] ){
+        AA_SAMPLES_DEC();
+        while (keystate[SDLK_MINUS]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_d] && keystate[SDLK_EQUALS] ){
+        DOF_SAMPLES_INC();
+        while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_d] && keystate[SDLK_MINUS] ){
+        DOF_SAMPLES_DEC();
+        while (keystate[SDLK_MINUS]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_m]){
+        MOVEMENT = (MOVEMENT) ? false : true;
+        cout << "Movement " << MOVEMENT << endl;
+        while (keystate[SDLK_m]) SDL_PumpEvents();
+      }
+      if(keystate[SDLK_e]){
+        SHOW_EDGES = (SHOW_EDGES) ? false : true;
+        cout << "Show Edges " << SHOW_EDGES << endl;
+        while (keystate[SDLK_e]) SDL_PumpEvents();
+      }
+      //    if(keystate[SDLK_d]){
+      //      DOF = (DOF) ? false : true;
+      //      cout << "Show Depth of Field " << DOF << endl;
+      //      while (keystate[SDLK_d]) SDL_PumpEvents();
+      //    }
+      if(keystate[SDLK_q]){
+        SDL_SaveBMP( screen, "screenshot1.bmp" );
+        exit(0);
+      }
+    }
+  }
+}
+
+
+
+
+
 int main( int argc, char* argv[] )
 {
   //  LoadGenericmodel(Objects);
@@ -265,21 +374,7 @@ vec3 traceRayFromCamera(float x , float y) {
   return getColor(cameraPos, direction, 0, NULLobjectIndex);
 }
 
-vec3 getRefractionRay(float nr, vec3 N, vec3 V) {
-  //cout << dot(N,V) << "\n";
-  //cout << dot(N,V)/(N.length()*V.length()) << "\n";
-  
-  
-  float I = -dot( N, V );
-  float n = 1/nr;
-  float cosTheta = 1.0f - n * n * (1.0f - I * I);
-  vec3 T = (n * V) + (n * I - sqrt(cosTheta)) * N;
-  //cout << "T=" << T.x << ", " << T.y << "\n";
-  //cout << "theta_i=" << thetai << ", theta_t=" << thetat << "\n";
-  
-  return T;
-  
-}
+
 
 vec3 GetReflectedDirection (const vec3& direction, const vec3& normal)
 {
@@ -291,29 +386,63 @@ vec3 GetRefractedDirection (const vec3& vec, const vec3& normal, float refractio
 {
   float nr;
   vec3 nNormal;
+  
   if (glm::dot(normal,vec) < 0.0f) {    // Going into.
     nr = 1.0 / refractionIndex;
     nNormal = normal;
-  } else {            // Coming out from.
+  }
+  else {            // Coming out from.
     nr = refractionIndex;
     nNormal = -1.0f * normal;
   }
   
   float cosAlpha = -glm::dot(nNormal,vec);
   
-  float a = 1.0 - nr*nr * (1.0 - (cosAlpha * cosAlpha));
-  if (a >= 0.0) {
-    return nr * vec + (nr * cosAlpha - sqrt (a)) * nNormal;
-  } else {
+  float cosT2 = 1.0 - nr*nr * (1.0 - (cosAlpha * cosAlpha));
+  
+  
+  if (cosT2 >= 0.0) {
+    return nr * vec + (nr * cosAlpha - sqrt (cosT2)) * nNormal;
+  }
+  else {
     return GetReflectedDirection (vec, nNormal);
   }
 }
 
+float clamp(const float &lo, const float &hi, const float &v)
+{ return std::max(lo, std::min(hi, v)); }
+
+void fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr)
+{
+  float cosi = clamp(-1, 1, glm::dot(I,N));
+  float etai = 1, etat = ior;
+  if (cosi > 0) { std::swap(etai, etat); }
+  // Compute sini using Snell's law
+  float sint = etai / etat * sqrtf(std::max(0.f, 1 - cosi * cosi));
+  // Total internal reflection
+  if (sint >= 1) {
+    kr = 1;
+  }
+  else {
+    float cost = sqrtf(std::max(0.f, 1 - sint * sint));
+    cosi = fabsf(cosi);
+    float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+    float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+    kr = (Rs * Rs + Rp * Rp) / 2;
+  }
+  // As a consequence of the conservation of energy, transmittance is given by:
+  // kt = 1 - kr;
+}
+
+
+
+
 vec3 getColor(const vec3& start, const vec3& dir, int depth, int sourceObjIndex){
+
+  if(depth > MAX_DEPTH) return vec3(2,0,0);
+
   Intersection closestIntersection;
   vec3 color = vec3(0,0,0);
-  
-  
   
   // Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
   if(ClosestIntersection(start, dir, closestIntersection, sourceObjIndex)) {
@@ -322,34 +451,90 @@ vec3 getColor(const vec3& start, const vec3& dir, int depth, int sourceObjIndex)
     int triangleIndex = closestIntersection.triangleIndex.second;
     vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
     
-    if(depth > 4){
-      return vec3(5,5,0);
-    }
-    
-    // Glass material (refraction)
-    if (Objects[objectIndex].material == Material::Glass) {
-      
-      vec3 reflectedDirection = GetReflectedDirection (dir, normal);
-      vec3 reflectedColor = getColor (closestIntersection.position, reflectedDirection, depth + 1, objectIndex);
-      color += reflectedColor * 0.8f;
-      
-      float transparency = 0.5f;
-      float refractionIndex = 1.1f;
-      color = color * (1.0f - transparency);
-      
-      vec3 refractedDirection = GetRefractedDirection (dir, normal, refractionIndex);
-      vec3 refractedColor = getColor (closestIntersection.position, refractedDirection, depth + 1, objectIndex);
-      color += refractedColor * transparency;
-      
-    }
+    switch (Objects[objectIndex].material) {
+        
+      case Material::ReflectionAndRefraction:
+      {
+        
+        float refractionIndex = 1.04f;
+        float bias1 = 0.001f;
+        
+        
+        vec3 refractionColor, reflectionColor = vec3(0,0,0);
+        // compute fresnel
+        float kr;
+        fresnel(dir, normal, refractionIndex, kr);
+        bool outside = glm::dot(dir, normal) < 0;
+        vec3 bias = bias1 * normal;
 
-    else{
-      color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
+        // compute refraction if it is not a case of total internal reflection
+        if (kr < 1) {
+          vec3 refractedDirection = GetRefractedDirection (dir, normal, refractionIndex);
+          vec3 refractionRayOrig = outside ? closestIntersection.position - bias : closestIntersection.position + bias;
+          refractionColor = getColor (refractionRayOrig, refractedDirection, depth + 1, objectIndex);
+        }
+        
+        vec3 reflectedDirection = GetReflectedDirection (dir, normal);
+        vec3 refractionRayOrig = outside ? closestIntersection.position - bias : closestIntersection.position + bias;
+        reflectionColor = getColor (refractionRayOrig, reflectedDirection, depth + 1, objectIndex);
+        
+        // mix the two
+        color += reflectionColor * kr + refractionColor * (1 - kr);
+        break;
+      }
+      case Material::Reflection:
+      {
+
+        vec3 reflectedDirection = GetReflectedDirection (dir, normal);
+        vec3 reflectedColor = getColor (closestIntersection.position, reflectedDirection, depth + 1, objectIndex);
+        // Full reflective
+//        color += reflectedColor * 0.9f;
+        // Reflective with original colour
+        color += Objects[objectIndex].triangles[triangleIndex].color*0.5f + reflectedColor * 0.1f;
+        break;
+      }
+      case Material:: Diffuse:
+      {
+        color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
+        break;
+      }
+      case Material::Phong:
+      {
+        //diffuse coefficient
+        float ks = 0.1f;
+        float specularity = 0.05;
+        vec3 reflectedDirection = GetReflectedDirection (dir, normal);
+        vec3 R = getColor (closestIntersection.position, reflectedDirection, depth + 1, objectIndex);
+//        vec3 Phong = ks * glm::normalize(lightColor) * Objects[objectIndex].triangles[triangleIndex].color;
+        
+        vec3 Phong = ks * DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color * glm::dot(R, glm::pow(dir, vec3(specularity,specularity,specularity)));
+        color += Phong;
+        break;
+      }
+    
+      case Material:: Test:
+      {
+        vec3 refractionColor, reflectionColor = vec3(0,0,0);
+        float refractionIndex = 1.04f;
+        float kr = 0.0f;
+        fresnel(dir, normal, refractionIndex, kr);
+        
+        // compute refraction if it is not a case of total internal reflection
+        if (kr < 1){
+          vec3 refractedDirection = GetRefractedDirection (dir, normal, refractionIndex);
+          refractionColor = getColor (closestIntersection.position, refractedDirection, depth + 1, objectIndex);
+        }
+        vec3 reflectedDirection = GetReflectedDirection (dir, normal);
+        reflectionColor = getColor (closestIntersection.position, reflectedDirection, depth + 1, objectIndex);
+        
+        color += reflectionColor * kr + refractionColor * (1 - kr);
+        break;
+      }
     }
   }
   // No Intersection
   else {
-    color = vec3(1,0,0);
+    color = vec3(0,0,0);
   }
   
   return color;
@@ -471,113 +656,11 @@ int Update(int t)
 void Control(){
   Uint8* keystate = SDL_GetKeyState( 0 );
   if (MOVEMENT){
-    Control_Camera(keystate);
-    Control_LightSource(keystate);
+    Controls::Control_Camera(keystate);
+    Controls::Control_LightSource(keystate);
   }
-  Control_Features(keystate);
-}
-
-void Control_LightSource(Uint8* keystate){
-  vec3 translateX = vec3(0.1,0  ,0);
-  vec3 translateY = vec3(0  ,0.1,0);
-  vec3 translateZ = vec3(0  ,0  ,0.1);
-  
-  if( keystate[SDLK_w] ) {
-    lightPos += translateZ;
-  }
-  if( keystate[SDLK_s] ) {
-    lightPos -= translateZ;
-  }
-  if( keystate[SDLK_a] ) {
-    lightPos -= translateX;
-  }
-  if( keystate[SDLK_d] ) {
-    lightPos += translateX;
-  }
-  if( keystate[SDLK_q] ) {
-    lightPos += translateY;
-  }
-  if( keystate[SDLK_e] ) {
-    lightPos -= translateY;
-  }
-}
-
-void Control_Camera(Uint8* keystate){
-  if( keystate[SDLK_UP] ) {
-    vec3 translateForward = vec3(0,0,0.1);
-    cameraPos += translateForward * cameraRot;
-  }
-  if( keystate[SDLK_DOWN] ) {
-    vec3 translateForward = vec3(0,0,0.1);
-    cameraPos -= translateForward * cameraRot;
-  }
-  if( keystate[SDLK_LEFT] ) {
-    cameraRot *= rotationLeft;
-  }
-  if( keystate[SDLK_RIGHT] ) {
-    cameraRot *= rotationRight;
-  }
-  if( keystate[SDLK_UP] && keystate[SDLK_RALT] ) {
-    cameraRot *= rotationUp;
-  }
-  if( keystate[SDLK_DOWN] && keystate[SDLK_RALT] ) {
-    cameraRot *= rotationDown;
-  }
-  if( keystate[SDLK_r] && keystate[SDLK_RALT] ) {
-    cameraPos = vec3(0.0,0.0,-3);
-  }
+  Controls::Control_Features(keystate);
 }
 
 
-void Control_Features(Uint8* keystate){
-  while(keystate[SDLK_LALT]) {
-    SDL_PumpEvents(); // update key state array
-    if(keystate[SDLK_s] && keystate[SDLK_EQUALS] ){
-      SOFT_SHADOWS_SAMPLES_INC();
-      while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_s] && keystate[SDLK_MINUS] ){
-      SOFT_SHADOWS_SAMPLES_DEC();
-      while (keystate[SDLK_MINUS]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_a] && keystate[SDLK_EQUALS] ){
-      AA_SAMPLES_INC();
-      while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_a] && keystate[SDLK_MINUS] ){
-      AA_SAMPLES_DEC();
-      while (keystate[SDLK_MINUS]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_d] && keystate[SDLK_EQUALS] ){
-      DOF_SAMPLES_INC();
-      while (keystate[SDLK_EQUALS]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_d] && keystate[SDLK_MINUS] ){
-      DOF_SAMPLES_DEC();
-      while (keystate[SDLK_MINUS]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_m]){
-      MOVEMENT = (MOVEMENT) ? false : true;
-      cout << "Movement " << MOVEMENT << endl;
-      while (keystate[SDLK_m]) SDL_PumpEvents();
-    }
-    if(keystate[SDLK_e]){
-      SHOW_EDGES = (SHOW_EDGES) ? false : true;
-      cout << "Show Edges " << SHOW_EDGES << endl;
-      while (keystate[SDLK_e]) SDL_PumpEvents();
-    }
-    //    if(keystate[SDLK_d]){
-    //      DOF = (DOF) ? false : true;
-    //      cout << "Show Depth of Field " << DOF << endl;
-    //      while (keystate[SDLK_d]) SDL_PumpEvents();
-    //    }
-    if(keystate[SDLK_q]){
-      finish();
-    }
-  }
-}
 
-void finish(){
-  SDL_SaveBMP( screen, "screenshot1.bmp" );
-  exit(0);
-}

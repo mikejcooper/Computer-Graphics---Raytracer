@@ -49,7 +49,7 @@ public:
 struct Object
 {
   std::vector<Triangle> triangles;
-  Material material = Material::Specular;
+  Material material = Material::Diffuse;
 
   
   void addTriangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
@@ -70,71 +70,6 @@ int getVertexIndex(std::string vertex){
   }
   return atoi(seglist[0].c_str());
 }
-
-// void printTriangles(std::vector<Triangle>& triangles){
-// 	cout << triangles.size() << "\n";
-// 	for (int i = 0; i < triangles.size(); ++i)
-// 	{
-// 		cout << i << ": \n";
-// 		cout << triangles[i].vId0 << " " << triangles[i].vId1 << " "  << triangles[i].vId2 << "\n";
-// 		cout << triangles[i].normal.x << " " << triangles[i].normal.y << " "  << triangles[i].normal.z << "\n";
-// 		cout << triangles[i].color.x << " " << triangles[i].color.y << " "  << triangles[i].color.z << "\n";
-// 	}
-// }
-
-// void printObjects(std::vector<Object>& objects){
-// 	for (int i = 0; i < objects.size(); ++i)
-// 	{
-// 		cout << objects[i].vIdMax << "\n";
-// 		printTriangles(objects[i].triangles);
-// 	}
-// }
-
-// int findMin(int a,int b, int c,int d){
-// 	int array[4] = {a,b,c,d};
-// 	int min = INT_MAX;
-// 	for (int i = 0; i < 4; ++i)
-// 	 {
-// 	 	if(array[i] < min){
-// 	 		min = array[i];
-// 	 	}
-// 	 }
-// 	return min;
-// }
-
-// int findMax(int a,int b, int c,int d){
-// 	int array[4] = {a,b,c,d};
-// 	int max = 0;
-// 	for (int i = 0; i < 4; ++i)
-// 	 {
-// 	 	if(array[i] > max){
-// 	 		max = array[i];
-// 	 	}
-// 	 }
-// 	return max;
-// }
-
-// glm::vec3 findMaxCoordinates(std::vector<Vertex> vertices){
-// 	glm::vec3 max = glm::vec3(0.0f,0.0f,0.0f);
-// 	for (int i = 0; i < vertices.size(); ++i)
-// 	{
-// 		if(vertices[i].position.x > max.x) max.x = vertices[i].position.x;
-// 		if(vertices[i].position.y > max.y) max.y = vertices[i].position.y;
-// 		if(vertices[i].position.z > max.z) max.z = vertices[i].position.z;
-// 	}
-// 	return max;
-// }
-
-// glm::vec3 findMinCoordinates(std::vector<Vertex> vertices){
-// 	glm::vec3 min = glm::vec3(std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
-// 	for (int i = 0; i < vertices.size(); ++i)
-// 	{
-// 		if(vertices[i].position.x < min.x) min.x = vertices[i].position.x;
-// 		if(vertices[i].position.y < min.y) min.y = vertices[i].position.y;
-// 		if(vertices[i].position.z < min.z) min.z = vertices[i].position.z;
-// 	}
-// 	return min;
-// }
 
 void LoadGenericmodel(std::vector<Object>& objects){
   using glm::vec3;
@@ -251,14 +186,9 @@ void LoadTestModel( std::vector<Object>& Objects )
   triangles.push_back( Triangle( C, B, A, green ) );
   triangles.push_back( Triangle( C, D, B, green ) );
 
-  StoreAsObject(triangles, Objects, Material::Specular);
-  triangles.clear();
-
-
   // Left wall
   triangles.push_back( Triangle( A, E, C, purple ) );
   triangles.push_back( Triangle( C, E, G, purple ) );
-  
   
   // Right wall
   triangles.push_back( Triangle( F, B, D, yellow ) );
@@ -285,6 +215,10 @@ void LoadTestModel( std::vector<Object>& Objects )
   G = vec3(240,165,272);
   H = vec3( 82,165,225);
   
+  
+  StoreAsObject(triangles, Objects, Material::Diffuse);
+  triangles.clear();
+  
   // Front
   triangles.push_back( Triangle(E,B,A,red) );
   triangles.push_back( Triangle(E,F,B,red) );
@@ -304,6 +238,9 @@ void LoadTestModel( std::vector<Object>& Objects )
   // TOP
   triangles.push_back( Triangle(G,F,E,red) );
   triangles.push_back( Triangle(G,H,F,red) );
+  
+  StoreAsObject(triangles, Objects, Material::Phong);
+  triangles.clear();
   
   // ---------------------------------------------------------------------------
   // Tall block

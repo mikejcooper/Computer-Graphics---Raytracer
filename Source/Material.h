@@ -2,11 +2,12 @@
 #define MATERIAL_H
 
 /* Material */
-enum class Material {
-	Diffuse,
-  DiffuseSpecular,
-  Specular,
-  Glass
-};
+typedef enum {
+  Diffuse,
+  Reflection,
+  ReflectionAndRefraction,
+  Phong,
+  Test,
+} Material;
 
 #endif

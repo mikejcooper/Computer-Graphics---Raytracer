@@ -8,6 +8,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include <math.h>
 
+
+
 using namespace std;
 using glm::vec3;
 using glm::mat3;
@@ -31,7 +33,7 @@ vec3  lightPos( 0, -0.5, -0.7 );
 vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
-int   MAX_BOUNCES = 8;
+int   MAX_DEPTH = 3;
 int   NULLobjectIndex = -1;
 
 bool  MOVEMENT = true;
