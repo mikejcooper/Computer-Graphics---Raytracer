@@ -9,7 +9,8 @@
 #include <math.h>
 #include "Intersection.hpp"
 #include "Ray.hpp"
-
+#include "Camera.hpp"
+#include "Control.hpp"
 
 
 
@@ -29,8 +30,11 @@ using glm::mat3;
 /* GLOBAL VARIABLES  */
 
 
-vec3  cameraPos(0.0,0.0,-3);
-mat3  cameraRot(1.0);
+//vec3  cameraPos(0.0,0.0,-3);
+//mat3  cameraRot(1.0);
+Camera camera;
+Control control;
+
 vec3  lightPos( 0, -0.5, -0.7 );
 vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
@@ -38,12 +42,12 @@ vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 int   MAX_DEPTH = 5;
 int   NULLobjectIndex = -1;
 
-bool  MOVEMENT = true;
-int   SOFT_SHADOWS_SAMPLES = 1;
-int   AA_SAMPLES = 1;
-int   DOF_VALUE = 1;
-bool  SHOW_EDGES = false;
-bool  DOF = false;
+//bool  MOVEMENT = true;
+//int   SOFT_SHADOWS_SAMPLES = 1;
+//int   AA_SAMPLES = 1;
+//int   DOF_VALUE = 1;
+//bool  SHOW_EDGES = false;
+//bool  DOF = false;
 
 /* Materials */
 float AIR_REFRACTIVE_INDEX = 1.0;
@@ -74,7 +78,7 @@ vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS   */
 
-void    Control();
+void    Control1();
 void    Control_LightSource(Uint8* keystate);
 void    Control_Camera(Uint8* keystate);
 void    Control_Features(Uint8* keystate);
@@ -109,65 +113,7 @@ float max(float a,float b);
 
 
 
-void SOFT_SHADOWS_SAMPLES_INC(){
-  if(SOFT_SHADOWS_SAMPLES + 6 < 32) {
-    SOFT_SHADOWS_SAMPLES += 6;
-  }
-  else {
-    SOFT_SHADOWS_SAMPLES = 31;
-  }
-  cout << "Soft Shadow sampling = " << SOFT_SHADOWS_SAMPLES << endl;
-}
 
-void SOFT_SHADOWS_SAMPLES_DEC(){
-  if(SOFT_SHADOWS_SAMPLES - 6 > 1) {
-    SOFT_SHADOWS_SAMPLES -= 6;
-  }
-  else {
-    SOFT_SHADOWS_SAMPLES = 1;
-  }
-  cout << "Anti-Aliasing sampling = " << SOFT_SHADOWS_SAMPLES << endl;
-}
-
-void AA_SAMPLES_INC(){
-  if(AA_SAMPLES + 1 < 30) {
-    AA_SAMPLES += 1;
-  }
-  else {
-    AA_SAMPLES = 30;
-  }
-  cout << "Anti-Aliasing sampling = " << AA_SAMPLES << endl;
-}
-
-void AA_SAMPLES_DEC(){
-  if(AA_SAMPLES - 1 > 1) {
-    AA_SAMPLES -= 1;
-  }
-  else {
-    AA_SAMPLES = 1;
-  }
-  cout << "Anti-Aliasing sampling = " << AA_SAMPLES << endl;
-}
-
-void DOF_SAMPLES_INC(){
-  if(DOF_VALUE + 1 < 30) {
-    DOF_VALUE += 1;
-  }
-  else {
-    DOF_VALUE = 30;
-  }
-  cout << "Depth of Field Value = " << DOF_VALUE << endl;
-}
-
-void DOF_SAMPLES_DEC(){
-  if(DOF_VALUE - 1 > 1) {
-    DOF_VALUE -= 1;
-  }
-  else {
-    DOF_VALUE = 1;
-  }
-  cout << "Depth of Field Value = " << DOF_VALUE << endl;
-}
 
 float max(float a,float b){
   if(a > b){

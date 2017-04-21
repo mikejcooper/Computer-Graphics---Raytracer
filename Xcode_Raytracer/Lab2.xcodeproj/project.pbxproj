@@ -12,6 +12,8 @@
 		C6CD0D291EAA1D5100F6AB1A /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D271EAA1D5100F6AB1A /* Color.cpp */; };
 		C6CD0D2C1EAA201100F6AB1A /* Intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D2A1EAA201100F6AB1A /* Intersection.cpp */; };
 		C6CD0D2F1EAA262100F6AB1A /* Ray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D2D1EAA262100F6AB1A /* Ray.cpp */; };
+		C6CD0D351EAA59A300F6AB1A /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D331EAA59A300F6AB1A /* Camera.cpp */; };
+		C6CD0D3B1EAA5F5700F6AB1A /* Control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D391EAA5F5700F6AB1A /* Control.cpp */; };
 		CE34F5FC1CDA7E3E00D6BBED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE34F5FB1CDA7E3E00D6BBED /* Assets.xcassets */; };
 		CE34F6071CDA7F6A00D6BBED /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE34F6061CDA7F6A00D6BBED /* SDL.framework */; };
 		CE34F60C1CDA7FFE00D6BBED /* ReadMeDevLite.txt in Resources */ = {isa = PBXBuildFile; fileRef = CE34F6091CDA7FFE00D6BBED /* ReadMeDevLite.txt */; };
@@ -134,6 +136,10 @@
 		C6CD0D2B1EAA201100F6AB1A /* Intersection.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Intersection.hpp; sourceTree = "<group>"; };
 		C6CD0D2D1EAA262100F6AB1A /* Ray.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Ray.cpp; sourceTree = "<group>"; };
 		C6CD0D2E1EAA262100F6AB1A /* Ray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Ray.hpp; sourceTree = "<group>"; };
+		C6CD0D331EAA59A300F6AB1A /* Camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Camera.cpp; sourceTree = "<group>"; };
+		C6CD0D341EAA59A300F6AB1A /* Camera.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Camera.hpp; sourceTree = "<group>"; };
+		C6CD0D391EAA5F5700F6AB1A /* Control.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Control.cpp; path = ../Control.cpp; sourceTree = "<group>"; };
+		C6CD0D3A1EAA5F5700F6AB1A /* Control.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Control.hpp; path = ../Control.hpp; sourceTree = "<group>"; };
 		CE34F5F21CDA7E3E00D6BBED /* Lab2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lab2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE34F5FB1CDA7E3E00D6BBED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CE34F6001CDA7E3E00D6BBED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -413,10 +419,14 @@
 				CE34F6121CDA808600D6BBED /* glm */,
 				C6A1A3391E8C68FF003915F2 /* main.cpp */,
 				C6A1A33B1E8C690A003915F2 /* main.h */,
+				C6CD0D391EAA5F5700F6AB1A /* Control.cpp */,
+				C6CD0D3A1EAA5F5700F6AB1A /* Control.hpp */,
 				C6CD0D2A1EAA201100F6AB1A /* Intersection.cpp */,
 				C6CD0D2B1EAA201100F6AB1A /* Intersection.hpp */,
 				C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */,
 				C6CD0D251EAA1CC600F6AB1A /* Raytracer.hpp */,
+				C6CD0D331EAA59A300F6AB1A /* Camera.cpp */,
+				C6CD0D341EAA59A300F6AB1A /* Camera.hpp */,
 				C6CD0D2D1EAA262100F6AB1A /* Ray.cpp */,
 				C6CD0D2E1EAA262100F6AB1A /* Ray.hpp */,
 				C6CD0D271EAA1D5100F6AB1A /* Color.cpp */,
@@ -874,8 +884,10 @@
 			files = (
 				C6CD0D2F1EAA262100F6AB1A /* Ray.cpp in Sources */,
 				C6CD0D261EAA1CC600F6AB1A /* Raytracer.cpp in Sources */,
+				C6CD0D351EAA59A300F6AB1A /* Camera.cpp in Sources */,
 				C6CD0D291EAA1D5100F6AB1A /* Color.cpp in Sources */,
 				C6A1A33A1E8C68FF003915F2 /* main.cpp in Sources */,
+				C6CD0D3B1EAA5F5700F6AB1A /* Control.cpp in Sources */,
 				C6CD0D2C1EAA201100F6AB1A /* Intersection.cpp in Sources */,
 				CE34F60D1CDA7FFE00D6BBED /* SDLMain.m in Sources */,
 			);
