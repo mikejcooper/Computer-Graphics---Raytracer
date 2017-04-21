@@ -29,10 +29,9 @@ int main( int argc, char* argv[] )
   //  LoadGenericmodel(Objects);
   LoadTestModel( Objects );
   
-  
-  
   screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
   int t = SDL_GetTicks(); // Set start value for timer.
+  
   camera = Camera( vec3(0.0,0.0,-3), mat3(1.0) );
   control = Control(&lightPos, &camera);
   
@@ -73,11 +72,9 @@ void Draw()
   }
   
   
-  
   if (control.DOF_VALUE > 1){
     Calculate_DOF();
   }
-  
   
   
   for( int y=0; y<SCREEN_HEIGHT; y++ ) {
@@ -108,8 +105,8 @@ Intersection ClosestIntersection(Ray ray){
   //Extract the triangle information from the mesh, and draw the triangle
   for( int i=0; i< Objects.size(); ++i ) {
     for (int j = 0; j < Objects[i].triangles.size(); ++j) {
-      vec3 x = Calculate_Intersection(Objects[i].triangles[j], ray.start, ray.dir);
-      if(i != ray.objectIndex && Intersects(x))  {
+      vec3 x =  closestIntersection.Calculate_Intersection(Objects[i].triangles[j], ray.start, ray.dir);
+      if(i != ray.objectIndex && closestIntersection.Intersects(x))  {
         // If the current intersection is closer than previous, update
         if(closestIntersection.distance > x.x) {
           closestIntersection.distance = x.x;
@@ -122,44 +119,6 @@ Intersection ClosestIntersection(Ray ray){
   }
   return closestIntersection;
 }
-
-bool Intersects(vec3 x){
-  // Check if largest float value can hold intersection distance
-  float maxDist = std::numeric_limits<float>::max();
-  // Check x statisfy rules for intersection
-  return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && 0 <= x.x && (x.y + x.z) <= 1);
-}
-
-vec3 Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir){
-  // vi represents the vertices of the triangle
-  // vector<Vertex> getVerticesOfTriangle(triangle){
-  vec3 v0 = triangle.v0;
-  vec3 v1 = triangle.v1;
-  vec3 v2 = triangle.v2;
-  
-  vec3 e1 = v1 - v0;    // Vector parallel to edge of the triangle between v0 and v1
-  vec3 e2 = v2 - v0;    // Vector parallel to edge of the triangle between v0 and v2
-  vec3 b = start - v0;  // Vector parallel to edge between v0 and camara position
-  
-  
-  // Cramer's rule: faster than   // mat3 A( -dir, e1, e2 ); return glm::inverse( A ) * b;
-  vec3 cross_e1e2 = glm::cross(e1,e2);
-  vec3 cross_be2 = glm::cross(b,e2);
-  vec3 cross_e1b = glm::cross(e1,b);
-  
-  float dot_e1e2b = glm::dot(cross_e1e2, b);
-  
-  float dot_e1e2d = glm::dot(cross_e1e2, -dir);
-  float dot_be2d =  glm::dot(cross_be2, -dir);
-  float dot_e1bd =  glm::dot(cross_e1b, -dir);
-  
-  // Point of intersection: x = (t, u, v), from v0 + ue1 + ve2 = s + td
-  vec3 x = vec3(dot_e1e2b / dot_e1e2d, dot_be2d / dot_e1e2d, dot_e1bd / dot_e1e2d);
-  
-  
-  return x;
-}
-
 
 vec3 DirectLight( const Intersection& intersection ){
   vec3 light(0.0f,0.0f,0.0f);
@@ -311,11 +270,11 @@ vec3 GetRefractedDirection (const vec3& vec, const vec3& normal, float refractio
   float nr;
   vec3 nNormal;
   
-  if (glm::dot(normal,vec) < 0.0f) {		// Going into.
+  if (glm::dot(normal,vec) < 0.0f) {    // Going into.
     nr = 1.0 / refractionIndex;
     nNormal = normal;
   }
-  else {						// Coming out from.
+  else {            // Coming out from.
     nr = refractionIndex;
     nNormal = -1.0f * normal;
   }

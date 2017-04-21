@@ -11,6 +11,8 @@
 
 #include "glm/glm.hpp"
 #include <iostream>
+#include "Triangle.hpp"
+
 
 using namespace std;
 using glm::vec3;
@@ -27,6 +29,10 @@ public:
   
   Intersection()
   : position( vec3() ), distance( 0.0f ), triangleIndex( std::pair <int, int>() ), didIntersect( false ) {}
+  
+  vec3 Calculate_Intersection(Triangle, vec3, vec3);
+  bool Intersects(vec3);
+
   
 };
 
