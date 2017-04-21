@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "ClosestIntersection(glm::detail::tvec3&lt;float&gt;, glm::detail::tvec3&lt;float&gt;, Intersection&amp;):Raytracer.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "Draw():Raytracer.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "glm::to_string(direction)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
