@@ -3,7 +3,7 @@
 #include <SDL.h>
 #include "SDLauxiliary.h"
 #include "TestModel.h"
-#include "Material.h"
+#include "Materials.hpp"
 #include <limits.h>
 #include "glm/gtc/type_ptr.hpp"
 #include <math.h>
@@ -11,6 +11,7 @@
 #include "Ray.hpp"
 #include "Camera.hpp"
 #include "Control.hpp"
+#include "Light.hpp"
 
 
 
@@ -35,8 +36,8 @@ using glm::mat3;
 Camera camera;
 Control control;
 
-vec3  lightPos( 0, -0.5, -0.7 );
-vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
+//vec3  lightPos( 0, -0.5, -0.7 );
+//vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
 int   MAX_DEPTH = 5;
@@ -67,6 +68,7 @@ const mat3  rotationRight(cos(-TURN_ANGLE),0,-sin(-TURN_ANGLE),0,1,0,sin(-TURN_A
 
 vector<Object> Objects;
 vector<Triangle> Triangles;
+vector<Light> Lights;
 vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 

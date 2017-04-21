@@ -9,7 +9,8 @@ using namespace glm;
 #include <sstream>
 #include <string>
 #include <fstream>
-#include "Material.h"
+#include "Material.hpp"
+#include "Materials.hpp"
 #include "Triangle.hpp"
 
 
@@ -26,7 +27,7 @@ glm::vec3 findMinCoordinates(vector<Vertex> vertices);
 struct Object
 {
   std::vector<Triangle> triangles;
-  Material material = Material::Diffuse;
+  Material material = Diffuse();
 
   
   void addTriangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
@@ -163,7 +164,7 @@ void LoadTestModel( std::vector<Object>& Objects )
   triangles.push_back( Triangle( C, B, A, green ) );
   triangles.push_back( Triangle( C, D, B, green ) );
   
-  StoreAsObject(triangles, Objects, Material::Reflection);
+  StoreAsObject(triangles, Objects, Diffuse());
   triangles.clear();
   
   // Left wall
@@ -196,7 +197,7 @@ void LoadTestModel( std::vector<Object>& Objects )
   H = vec3( 82,165,225);
   
   
-  StoreAsObject(triangles, Objects, Material::Diffuse);
+  StoreAsObject(triangles, Objects, Diffuse());
   triangles.clear();
   
   // Front
@@ -219,7 +220,7 @@ void LoadTestModel( std::vector<Object>& Objects )
   triangles.push_back( Triangle(G,F,E,red) );
   triangles.push_back( Triangle(G,H,F,red) );
   
-  StoreAsObject(triangles, Objects, Material::Phong);
+  StoreAsObject(triangles, Objects, Phong());
   triangles.clear();
   
   // ---------------------------------------------------------------------------
@@ -255,7 +256,7 @@ void LoadTestModel( std::vector<Object>& Objects )
   triangles.push_back( Triangle(G,F,E,blue) );
   triangles.push_back( Triangle(G,H,F,blue) );
   
-  StoreAsObject(triangles, Objects, Material::Diffuse);
+  StoreAsObject(triangles, Objects, Diffuse());
 
   
   
