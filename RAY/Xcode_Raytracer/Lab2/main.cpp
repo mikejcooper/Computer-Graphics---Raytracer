@@ -33,7 +33,7 @@ int main( int argc, char* argv[] )
   int t = SDL_GetTicks(); // Set start value for timer.
   
   Lights.push_back(Light());
-
+  
   camera = Camera( vec3(0.0,0.0,-3), mat3(1.0) );
   control = Control(&Lights[0].position, &camera);
   
@@ -253,76 +253,8 @@ bool EdgeDectection(vec3 current_color, vec3 average_color){
 
 
 
-vec3 GetReflectedDirection (const vec3& direction, const vec3& normal)
-{
-  float dotProduct = glm::dot(normal,direction);
-  return direction - (2.0f * normal * dotProduct);
-}
-
-vec3 GetRefractedDirection (const vec3& vec, const vec3& normal, float refractionIndex)
-{
-  float nr;
-  vec3 nNormal;
-  
-  if (glm::dot(normal,vec) < 0.0f) {    // Going into.
-    nr = 1.0 / refractionIndex;
-    nNormal = normal;
-  }
-  else {            // Coming out from.
-    nr = refractionIndex;
-    nNormal = -1.0f * normal;
-  }
-  
-  float cosAlpha = -glm::dot(nNormal,vec);
-  
-  float cosT2 = 1.0 - nr*nr * (1.0 - (cosAlpha * cosAlpha));
-  
-  
-  if (cosT2 >= 0.0) {
-    return nr * vec + (nr * cosAlpha - sqrt (cosT2)) * nNormal;
-  }
-  else {
-    return GetReflectedDirection (vec, nNormal);
-  }
-}
-
-float clamp(const float &lo, const float &hi, const float &v)
-{ return std::max(lo, std::min(hi, v)); }
-
-void fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr)
-{
-  float cosi = clamp(-1, 1, glm::dot(I,N));
-  float etai = 1, etat = ior;
-  if (cosi > 0) { std::swap(etai, etat); }
-  // Compute sini using Snell's law
-  float sint = etai / etat * sqrtf(std::max(0.f, 1 - cosi * cosi));
-  // Total internal reflection
-  if (sint >= 1) {
-    kr = 1;
-  }
-  else {
-    float cost = sqrtf(std::max(0.f, 1 - sint * sint));
-    cosi = fabsf(cosi);
-    float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
-    float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
-    kr = (Rs * Rs + Rp * Rp) / 2;
-  }
-  // As a consequence of the conservation of energy, transmittance is given by:
-  // kt = 1 - kr;
-}
 
 
-
-
-vec3 traceRayFromCamera(float x , float y) {
-  // Get direction of camera
-  vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
-  direction = direction * camera.rotation;
-  Ray ray = Ray(camera.position, direction, NULLobjectIndex);
-  
-  
-  return getColor(ray, 0);
-}
 
 float getReflectance(const vec3 normal, const vec3 incident, float n1, float n2) {
   float n = n1 / n2;
@@ -359,93 +291,21 @@ vec3 reflectVector(vec3 vector, vec3 normal) {
   return normal * 2.0f * dot(vector,normal) - vector;
 }
 
-bool isInShadow(const Ray ray, double lightDistance) {
-  Intersection intersection = ClosestIntersection(ray);
-  
-  return intersection.didIntersect && intersection.distance < lightDistance;
-}
-
-vec3 getAmbientLighting(Intersection intersection, vec3 color) {
-  return color * DirectLight(intersection);
-}
-
-vec3 getSpecularLighting(const Intersection intersection, Ray ray, Light light) {
-  vec3 specularColor(0.0, 0.0, 0.0);
-  vec3 normal = Objects[intersection.triangleIndex.first].triangles[intersection.triangleIndex.second].normal;
-  //  Objects[intersection.triangleIndex.first].material
-  float shininess = Objects[intersection.triangleIndex.first].material.getShininess();
-  
-  
-  if (shininess == 0.0f) {
-    /* Don't perform specular lighting on non shiny objects. */
-    return specularColor;
-  }
-  
-  vec3 view = normalize(ray.start - intersection.position);
-  vec3 lightOffset = light.position - intersection.position;
-  vec3 reflected = reflectVector(normalize(lightOffset), normal);
-  
-  float dot = glm::dot(view, reflected);
-  
-  if (dot <= 0) {
-    return specularColor;
-  }
-  
-  specularColor = pow(dot, shininess) * light.color;
-  
-  return specularColor;
-}
-
-
-vec3 getDiffuseAndSpecularLighting(Intersection intersection, Ray ray, vec3 color) {
-  vec3 diffuseColor(0.0, 0.0, 0.0);
-  vec3 specularColor(0.0, 0.0, 0.0);
-  int objectIndex = intersection.triangleIndex.first;
-  int triangleIndex = intersection.triangleIndex.second;
-  vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
-  
-  for (vector<Light>::iterator itr = Lights.begin(); itr < Lights.end(); itr++) {
-    Light light = *itr;
-    vec3 lightOffset = light.position - intersection.position;
-    float lightDistance = lightOffset.length();
-    /**
-     * TODO: Be careful about normalizing lightOffset too.
-     */
-    vec3 lightDirection = normalize(lightOffset);
-    float dotProduct = dot(normal,lightDirection);
-    
-    /**
-     * Intersection is facing light.
-     */
-    if (dotProduct >= 0.0f) {
-      Ray shadowRay = Ray(intersection.position, lightDirection, objectIndex);
-      
-      if (isInShadow(shadowRay, lightDistance)) {
-        /**
-         * Position is in shadow of another object - continue with other lights.
-         */
-        continue;
-      }
-      
-      diffuseColor = (diffuseColor + (color * dotProduct)) * light.color;
-      specularColor = specularColor + getSpecularLighting(intersection, ray, light);
-    }
-  }
-  
-  return diffuseColor + specularColor;
+vec3 getAmbientLighting(Intersection intersection) {
+  return DirectLight(intersection) * Objects[intersection.triangleIndex.first].triangles[intersection.triangleIndex.second].color;
 }
 
 vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, int depth) {
   
   float reflectivity = Objects[intersection.triangleIndex.first].material.getReflectivity();
-//  float startRefractiveIndex = intersection.startMaterial->getRefractiveIndex();
-  float startRefractiveIndex = 0.0f;
+  //  float startRefractiveIndex = intersection.startMaterial->getRefractiveIndex();
+  float startRefractiveIndex = 0.9f;
   float endRefractiveIndex = Objects[intersection.triangleIndex.first].material.getRefractiveIndex();
   
   int reflectionsRemaining = 1;
   
   vec3 normal = Objects[intersection.triangleIndex.first].triangles[intersection.triangleIndex.second].normal;
-
+  
   /**
    * Don't perform lighting if the object is not reflective or refractive or we have
    * hit our recursion limit.
@@ -476,7 +336,7 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   
   if (reflectivePercentage > 0) {
     vec3 reflected = reflectVector(ray.start,
-                                     normal);
+                                   normal);
     Ray reflectedRay(intersection.position, reflected, intersection.triangleIndex.first);
     
     
@@ -499,113 +359,31 @@ vec3 getColor(Ray ray, int depth){
   
   Intersection closestIntersection = ClosestIntersection(ray);
   vec3 color = vec3(0,0,0);
-//  return DirectLight(closestIntersection) * Objects[closestIntersection.triangleIndex.first].triangles[closestIntersection.triangleIndex.second].color;
   
-  // Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
-    if(closestIntersection.didIntersect) {
-      vec3 color = Objects[closestIntersection.triangleIndex.first].triangles[closestIntersection.triangleIndex.second].color;
-      vec3 ambientColor = getAmbientLighting(closestIntersection, color);
-      vec3 diffuseAndSpecularColor = getDiffuseAndSpecularLighting(closestIntersection, ray, color);
-      vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
-      return ambientColor + diffuseAndSpecularColor + reflectedColor;
-    }
-    // No Intersection
-    else {
-      color = vec3(0,0,0);
-    }
+  //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
+  if(closestIntersection.didIntersect) {
+    vec3 ambientColor = getAmbientLighting(closestIntersection);
+    vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
+    return ambientColor + reflectedColor;
+  }
+  // No Intersection
+  else {
+    color = vec3(0,0,0);
+  }
   
-    return color;
+  return color;
 }
 
+vec3 traceRayFromCamera(float x , float y) {
+  // Get direction of camera
+  vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
+  direction = direction * camera.rotation;
+  Ray ray = Ray(camera.position, direction, NULLobjectIndex);
+  
+  
+  return getColor(ray, 0);
+}
 
-
-
-
-
-//// Identify triangle and object
-//int objectIndex = closestIntersection.triangleIndex.first;
-//int triangleIndex = closestIntersection.triangleIndex.second;
-//vec3 normal = Objects[objectIndex].triangles[triangleIndex].normal;
-//
-//switch (Objects[objectIndex].material) {
-//
-//  case Material::ReflectionAndRefraction:
-//  {
-//
-//    float refractionIndex = 1.04f;
-//    float bias1 = 0.001f;
-//
-//
-//    vec3 refractionColor, reflectionColor = vec3(0,0,0);
-//    // compute fresnel
-//    float kr;
-//    fresnel(ray.dir, normal, refractionIndex, kr);
-//    bool outside = glm::dot(ray.dir, normal) < 0;
-//    vec3 bias = bias1 * normal;
-//
-//    // compute refraction if it is not a case of total internal reflection
-//    if (kr < 1) {
-//      vec3 refractedDirection = GetRefractedDirection (ray.dir, normal, refractionIndex);
-//      vec3 refractionRayOrig = outside ? closestIntersection.position - bias : closestIntersection.position + bias;
-//      Ray a = Ray(refractionRayOrig, refractedDirection, objectIndex);
-//
-//      refractionColor = getColor (a, depth + 1);
-//
-//    }
-//
-//    vec3 reflectedDirection = GetReflectedDirection (ray.dir, normal);
-//    vec3 refractionRayOrig = outside ? closestIntersection.position - bias : closestIntersection.position + bias;
-//
-//    Ray a = Ray(refractionRayOrig, reflectedDirection, objectIndex);
-//
-//    reflectionColor = getColor (a, depth + 1);
-//
-//    // mix the two
-//    color += reflectionColor * kr + refractionColor * (1 - kr);
-//    break;
-//  }
-//  case Material::Reflection:
-//  {
-//
-//    vec3 reflectedDirection = GetReflectedDirection (ray.dir, normal);
-//    Ray a = Ray(closestIntersection.position, reflectedDirection, objectIndex);
-//    vec3 reflectedColor = getColor (a, depth + 1);
-//    // Full reflective
-//    color += reflectedColor * 0.8f;
-//    // Reflective with original colour
-//    //        color += Objects[objectIndex].triangles[triangleIndex].color*0.5f + reflectedColor * 0.5f;
-//    break;
-//  }
-//  case Material:: Diffuse:
-//  {
-//    color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
-//    break;
-//  }
-//  case Material::Phong:
-//  {
-//    //        Phone = Diffuse + Specular + Ambient
-//    color = DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color;
-//    vec3 lightDirection = DirectLight(closestIntersection);
-//    float len2 = glm::dot(lightDirection, lightDirection);
-//
-//
-//    break;
-//  }
-//
-//  case Material:: Test:
-//  {
-//    //diffuse coefficient
-//    //        float ks = 0.1f;
-//    //        float specularity = 0.05;
-//    //        vec3 reflectedDirection = GetReflectedDirection (dir, normal);
-//    //        vec3 R = getColor (closestIntersection.position, reflectedDirection, depth + 1, objectIndex);
-//    //        //        vec3 Phong = ks * glm::normalize(lightColor) * Objects[objectIndex].triangles[triangleIndex].color;
-//    //
-//    //        vec3 Phong = ks * DirectLight(closestIntersection) * Objects[objectIndex].triangles[triangleIndex].color * glm::dot(R, glm::pow(dir, vec3(specularity,specularity,specularity)));
-//    //        color += Phong;
-//    //        break;
-//  }
-//}
 
 void Calculate_DOF() {
   
@@ -708,7 +486,6 @@ vec3 traceDofFromCamera1(float x, float y) {
 vec3 AddVectorAndAverage(vec3 A, vec3 B) {
   return vec3( A.x + B.x ,  A.y + B.y , A.z + B.z ) / 2.0f;
 }
-
 
 
 
