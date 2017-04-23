@@ -31,9 +31,9 @@ public:
   Material (float _shininess, float _reflectiveness, float _refractiveIndex)
     : shininess( _shininess ), reflectiveness( _reflectiveness ), refractiveIndex(_refractiveIndex) {}
   
-  virtual float getShininess();
-  virtual float getReflectivity();
-  virtual float getRefractiveIndex();
+  float getShininess();
+  float getReflectivity();
+  float getRefractiveIndex();
   
 };
 

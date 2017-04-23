@@ -22,7 +22,7 @@ public:
   mat3  rotation;
   
   Camera()
-  : position( NULL ), rotation( NULL ) {}
+  : position( vec3(0,0,0) ), rotation( mat3(0) ) {}
   
   Camera(vec3 _cameraPos, mat3 _cameraRot)
   : position( _cameraPos ), rotation( _cameraRot ) {}

@@ -10,7 +10,7 @@
 #define Control_hpp
 
 #include <stdint.h>
-#include "glm.hpp"
+#include "glm/glm.hpp"
 #include <stdint.h>
 #include <SDL.h>
 #include "Camera.hpp"
