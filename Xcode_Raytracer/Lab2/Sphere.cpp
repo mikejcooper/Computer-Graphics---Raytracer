@@ -56,9 +56,9 @@ Intersection Sphere::intersect(Ray ray, int i) {
   
   
   // Normal needs to be flipped if this is a refractive ray.
-  if (glm::dot(ray.dir,normal) > 0) {
-    normal = normal * -1.0f;
-  }
+//  if (glm::dot(ray.dir,normal) > 0) {
+//    normal = normal * -1.0f;
+//  }
   
   Intersection intersection = Intersection();
   intersection.position = point;

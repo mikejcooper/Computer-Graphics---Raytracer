@@ -112,8 +112,6 @@ vec3 traceRayFromCamera(float x , float y) {
 
 vec3  indirectLight = 0.2f * vec3( 1, 1, 1 );
 
-
-
 vec3 getColor(Ray ray, int depth){
   
   if(depth > MAX_DEPTH) return vec3(2,0,0);
@@ -158,13 +156,41 @@ Intersection ClosestIntersection(Ray ray){
   return closestIntersection;
 }
 
+vec3 getSpecularLighting(const Intersection& intersection, Light* light, const Ray& ray) {
+  
+  vec3 specularColor(0.0, 0.0, 0.0);
+  float shininess = Objects[intersection.objIndex]->material.getShininess();
+  
+  if (shininess == 0.0f) {
+    /* Don't perform specular lighting on non shiny objects. */
+    return specularColor;
+  }
+  
+  vec3 view = normalize(ray.start - intersection.position);
+  vec3 lightOffset = light->position - intersection.position;
+  
+  vec3 reflected = intersection.normal * 2.0f * glm::dot(normalize(lightOffset),intersection.normal) - normalize(lightOffset);
+  
+  
+  float dot = glm::dot(view,reflected);
+  
+  if (dot <= 0) {
+    return specularColor;
+  }
+  
+  vec3 specularAmount = pow(dot, shininess) * light->color * 0.005f;
+    
+  return specularAmount;
+}
+
 
 
 vec3 DirectLight( const Intersection& intersection ){
+  vec3 diffuseColor(0.0f,0.0f,0.0f);
+  vec3 specularColor(0.0f,0.0f,0.0f);
   vec3 light(0.0f,0.0f,0.0f);
   vec3 positions[100];
   SoftShadowPositions(positions);
-  int objectIndex = intersection.objIndex;
   
   for (int k = 0; k < control.SOFT_SHADOWS_SAMPLES; k++) {
     // Unit vector from point of intersection to light
@@ -177,27 +203,25 @@ vec3 DirectLight( const Intersection& intersection ){
     // Direct light intensity given distance/radius
     float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
     
+    Ray ray = Ray(positions[k], -surfaceToLight, intersection.objIndex);
+    Intersection closestIntersection = ClosestIntersection(ray);
     
-    Ray ray = Ray(positions[k], -surfaceToLight, NULLobjectIndex);
-    
-    Intersection nearestTriangle = ClosestIntersection(ray);
-    
-  
-//    
-    int nearestTriangleObjectIndex = nearestTriangle.objIndex;
-    if (objectIndex != nearestTriangleObjectIndex){
+    if (intersection.objIndex != closestIntersection.objIndex){
       // If intersection is closer to light source than self
-      if (nearestTriangle.distance < radius * 0.99f){
-        float refractiveIndex = Objects[nearestTriangle.objIndex]->material.getRefractiveIndex();
+      if (closestIntersection.distance < radius * 0.99f){
+        float refractiveIndex = Objects[closestIntersection.objIndex]->material.getRefractiveIndex();
         float shadowAlpha = (refractiveIndex == 0) ? 0.0f : 1.0f / 90.0f * refractiveIndex;
         lightIntensity = shadowAlpha; // Zero light intensity
 //        lightIntensity = 0.0f;
       }
     }
     
-    light += ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES ) * lightIntensity;
+    diffuseColor = (diffuseColor + lightIntensity) * ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES );
+    specularColor = specularColor + getSpecularLighting(intersection, &Lights[0], ray);
+    
+//    light += ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
-  return light + indirectLight;
+  return specularColor + diffuseColor + indirectLight;
 }
 
 

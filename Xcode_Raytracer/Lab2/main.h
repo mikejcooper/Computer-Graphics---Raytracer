@@ -40,7 +40,7 @@ Control control;
 //vec3  lightPos( 0, -0.5, -0.7 );
 //vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
 
-int   MAX_DEPTH = 10;
+int   MAX_DEPTH = 6;
 int   NULLobjectIndex = -1;
 
 //bool  MOVEMENT = true;
