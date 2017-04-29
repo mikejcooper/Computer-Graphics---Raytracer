@@ -223,6 +223,8 @@ vec3 DirectLight( const Intersection& intersection ){
   return specularColor + diffuseColor + indirectLight;
 }
 
+
+
 #define clamp(x, upper, lower) (fmin(upper, fmax(x, lower)))
 
 float fresnel(const vec3 I, const vec3 N, const float ior)
@@ -260,46 +262,6 @@ vec3 refract(const vec3 I, const vec3 N, const float ior)
   return k < 0 ? vec3(0,0,0) : eta * I + (eta * cosi - sqrtf(k)) * n;
 }
 
-vec3 reflect(const vec3 &I, const vec3 &N)
-{
-  return I - 2 * dot(I,N) * N;
-}
-
-
-// fresnel
-float getReflectance(const vec3 normal, const vec3 incident, float n1, float n2) {
-  float n = n1 / n2;
-  float cosI = dot(-normal,incident);
-  float sinT2 = n * n * (1.0 - cosI * cosI);
-  
-  if (sinT2 > 1.0) {
-    // Total Internal Reflection.
-    return 1.0;
-  }
-  
-  float cosT = sqrt(1.0 - sinT2);
-  float r0rth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
-  float rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
-  float result = (r0rth * r0rth + rPar * rPar) / 2.0;
-//  cout << result << endl;
-  return result;
-}
-
-vec3 refractVector(const vec3 normal, const vec3 incident, float ior) {
-  float n = ior;
-  float cosI = dot(-normal,incident);
-  float sinT2 = n * n * (1.0 - cosI * cosI);
-  
-  if (sinT2 > 1.0) {
-    cerr << "Bad refraction vector!" << endl;
-    exit(EXIT_FAILURE);
-  }
-  
-  float cosT = sqrt(1.0 - sinT2);
-  return incident * n + normal * (n * cosI - cosT);
-}
-
-
 vec3 reflectVector(vec3 vector, vec3 normal) {
   return normal * 2.0f * dot(vector,normal) - vector;
 }
@@ -309,27 +271,16 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   vec3 refractiveColor;
     
   float reflectivity = Objects[intersection.objIndex]->material.getReflectivity();
+  float refractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
   
-//  if (reflectivity > 0) {
-//    vec3 reflected = reflectVector(ray.start, intersection.normal);
-//    Ray reflectedRay(intersection.position, reflected, intersection.objIndex);
-//    reflectiveColor = getColor(reflectedRay, depth + 1);
-//  }
-  
-  
-//  float startRefractiveIndex = Objects[intersection.objIndexPrevious]->material.getRefractiveIndex();
-  float endRefractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
-  float ior = endRefractiveIndex;
-  
-  
-  float bias_tmp = 0.2f;
+  float bias_tmp = 0.1f;
   float kr;
-  kr = fresnel(ray.dir, intersection.normal, ior);
+  kr = fresnel(ray.dir, intersection.normal, refractiveIndex);
   bool outside = dot(ray.dir,intersection.normal) < 0;
   vec3 bias = bias_tmp * intersection.normal;
   // compute refraction if it is not a case of total internal reflection
-  if (kr < 1 && ior > 1) {
-    vec3 refractionDirection = normalize(refract(ray.dir, intersection.normal, ior));
+  if (kr < 1 && refractiveIndex > 1) {
+    vec3 refractionDirection = normalize(refract(ray.dir, intersection.normal, refractiveIndex));
     vec3 refractionRayOrig = outside ? intersection.position - bias : intersection.position + bias;
     Ray refractRay = Ray(refractionRayOrig, refractionDirection, intersection.objIndex);
     refractiveColor = getColor(refractRay, depth+1);
@@ -346,50 +297,12 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   return  reflectiveColor * kr + refractiveColor * (1 - kr);
   
   
-  
-  
-  
-  
-//  vec3 normal = intersection.normal;
-
-  /**
-   * Don't perform lighting if the object is not reflective or refractive or we have
-   * hit our recursion limit.
-   */
-//  if (reflectivity == 0.0f && endRefractiveIndex == 0.0f) {
-//    return vec3(0.0f,0.0f,0.0f);
+//  if (reflectivity > 0) {
+//    vec3 reflected = reflectVector(ray.start, intersection.normal);
+//    Ray reflectedRay(intersection.position, reflected, intersection.objIndex);
+//    reflectiveColor = getColor(reflectedRay, depth + 1);
 //  }
 //  
-//  // Default to exclusively reflective values.
-//  float reflectivePercentage = reflectivity;
-//  float refractivePercentage = 0;
-//  
-//  
-//  // Refractive index overrides the reflective property.
-//  if (endRefractiveIndex != 0.0f) {
-//    reflectivePercentage = getReflectance(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
-//    refractivePercentage = 1 - reflectivePercentage;
-//  }
-//  
-//  //No ref{ra,le}ctive properties - bail early.
-//  if (refractivePercentage <= 0 && reflectivePercentage <= 0) {
-//    return vec3(0.0f,0.0f,0.0f);
-//  }
-//
-//  
-//  if (reflectivePercentage > 0) {
-//      vec3 reflected = reflectVector(ray.start, normal);
-//      Ray reflectedRay(intersection.position, reflected, intersection.objIndex);
-//      reflectiveColor = getColor(reflectedRay, depth + 1) * reflectivePercentage;
-//  }
-//  
-//  if (refractivePercentage > 0) {
-//    vec3 refracted = refractVector(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
-//    Ray refractedRay = Ray(intersection.position, refracted, intersection.objIndex);
-//    
-//    refractiveColor = getColor(refractedRay, depth + 1) * refractivePercentage;
-//  }
-  
 //  return reflectiveColor + refractiveColor;
 }
 

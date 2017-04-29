@@ -184,8 +184,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle( A, E, C, purple ) );
   triangles.push_back( Triangle( C, E, G, purple ) );
   
-//  Objects->push_back(new Cube(triangles, Diffuse(purple)));
-  Objects->push_back(new Cube(triangles, Diffuse(yellow)));
+  Objects->push_back(new Cube(triangles, Diffuse(purple)));
   triangles.clear();
   
   // Right wall
@@ -244,7 +243,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle(G,F,E,red) );
   triangles.push_back( Triangle(G,H,F,red) );
   
-  Objects->push_back(new Cube(triangles, Diffuse(blue)));
+  Objects->push_back(new Cube(triangles, Phong(red)));
   triangles.clear();
   
   // ---------------------------------------------------------------------------
@@ -280,7 +279,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle(G,F,E,blue) );
   triangles.push_back( Triangle(G,H,F,blue) );
   
-  Objects->push_back(new Cube(triangles, Diffuse(blue)));
+  Objects->push_back(new Cube(triangles, Phong(blue)));
   triangles.clear();
   
   vec3 center = vec3(-0.3,0.7,-0.7);
