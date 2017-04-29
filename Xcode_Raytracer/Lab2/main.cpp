@@ -225,8 +225,9 @@ vec3 DirectLight( const Intersection& intersection ){
 
 #define clamp(x, upper, lower) (fmin(upper, fmax(x, lower)))
 
-void fresnel(const vec3 N, const vec3 I, const float ior, float kr)
+float fresnel(const vec3 I, const vec3 N, const float ior)
 {
+  float kr;
   float cosi = clamp(-1, 1, dot(I, N));
   float etai = 1, etat = ior;
   if (cosi > 0) { std::swap(etai, etat); }
@@ -243,6 +244,7 @@ void fresnel(const vec3 N, const vec3 I, const float ior, float kr)
     float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
     kr = (Rs * Rs + Rp * Rp) / 2;
   }
+  return kr;
   // As a consequence of the conservation of energy, transmittance is given by:
   // kt = 1 - kr;
 }
@@ -283,8 +285,8 @@ float getReflectance(const vec3 normal, const vec3 incident, float n1, float n2)
   return result;
 }
 
-vec3 refractVector(const vec3 normal, const vec3 incident, float n1, float n2) {
-  float n = n1 / n2;
+vec3 refractVector(const vec3 normal, const vec3 incident, float ior) {
+  float n = ior;
   float cosI = dot(-normal,incident);
   float sinT2 = n * n * (1.0 - cosI * cosI);
   
@@ -308,25 +310,52 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
     
   float reflectivity = Objects[intersection.objIndex]->material.getReflectivity();
   
-  if (reflectivity > 0) {
+//  if (reflectivity > 0) {
+//    vec3 reflected = reflectVector(ray.start, intersection.normal);
+//    Ray reflectedRay(intersection.position, reflected, intersection.objIndex);
+//    reflectiveColor = getColor(reflectedRay, depth + 1);
+//  }
+  
+  
+//  float startRefractiveIndex = Objects[intersection.objIndexPrevious]->material.getRefractiveIndex();
+  float endRefractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
+  float ior = endRefractiveIndex;
+  
+  
+  float bias_tmp = 0.2f;
+  float kr;
+  kr = fresnel(ray.dir, intersection.normal, ior);
+  bool outside = dot(ray.dir,intersection.normal) < 0;
+  vec3 bias = bias_tmp * intersection.normal;
+  // compute refraction if it is not a case of total internal reflection
+  if (kr < 1 && ior > 1) {
+    vec3 refractionDirection = normalize(refract(ray.dir, intersection.normal, ior));
+    vec3 refractionRayOrig = outside ? intersection.position - bias : intersection.position + bias;
+    Ray refractRay = Ray(refractionRayOrig, refractionDirection, intersection.objIndex);
+    refractiveColor = getColor(refractRay, depth+1);
+  }
+  if(reflectivity > 0){
     vec3 reflected = reflectVector(ray.start, intersection.normal);
-    Ray reflectedRay(intersection.position, reflected, intersection.objIndex);
+    vec3 reflectionRayOrig = outside ? intersection.position + bias : intersection.position - bias;
+    Ray reflectedRay(reflectionRayOrig, reflected, intersection.objIndex);
     reflectiveColor = getColor(reflectedRay, depth + 1);
   }
   
   
-//  float startRefractiveIndex = Objects[intersection.objIndexPrevious]->material.getRefractiveIndex();
-//  float endRefractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
-//  float ior = startRefractiveIndex / endRefractiveIndex;
-//  
-//
-//  
+  // mix the two
+  return  reflectiveColor * kr + refractiveColor * (1 - kr);
+  
+  
+  
+  
+  
+  
 //  vec3 normal = intersection.normal;
-//
-//  /**
-//   * Don't perform lighting if the object is not reflective or refractive or we have
-//   * hit our recursion limit.
-//   */
+
+  /**
+   * Don't perform lighting if the object is not reflective or refractive or we have
+   * hit our recursion limit.
+   */
 //  if (reflectivity == 0.0f && endRefractiveIndex == 0.0f) {
 //    return vec3(0.0f,0.0f,0.0f);
 //  }
@@ -361,7 +390,7 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
 //    refractiveColor = getColor(refractedRay, depth + 1) * refractivePercentage;
 //  }
   
-  return reflectiveColor + refractiveColor;
+//  return reflectiveColor + refractiveColor;
 }
 
 

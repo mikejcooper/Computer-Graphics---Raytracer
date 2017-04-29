@@ -33,7 +33,7 @@ public:
   Object(Material _material, int _id)
   : material(_material), id(_id) {};
   
-  Object() {};
+//  Object() {};
   
   virtual Intersection intersect(Ray, int) = 0;
   

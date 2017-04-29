@@ -24,8 +24,8 @@ public:
   Boundaries bounds;
   
 
-  Sphere()
-  : Object() {};
+//  Sphere()
+//  : Object() {};
   
   
   Sphere(vec3 center_, float radius_,  Material _material)

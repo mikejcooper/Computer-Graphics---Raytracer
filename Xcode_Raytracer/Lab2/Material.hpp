@@ -35,7 +35,7 @@ public:
   Material (float _shininess, float _reflectiveness, float _refractiveIndex, int _id, vec3 _color)
     : shininess( _shininess ), reflectiveness( _reflectiveness ), refractiveIndex(_refractiveIndex), id(_id), color(_color) {}
   
-  Material() {};
+//  Material() {};
   
   float getShininess();
   float getReflectivity();
