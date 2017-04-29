@@ -39,9 +39,8 @@ Control control;
 
 //vec3  lightPos( 0, -0.5, -0.7 );
 //vec3  lightColor = 14.0f * vec3( 1, 1, 1 );
-vec3  indirectLight = 0.5f * vec3( 1, 1, 1 );
 
-int   MAX_DEPTH = 5;
+int   MAX_DEPTH = 10;
 int   NULLobjectIndex = -1;
 
 //bool  MOVEMENT = true;
@@ -90,8 +89,9 @@ int     Update(int t);
 void    Draw();
 
 bool    Intersects(vec3 x);
-bool    ClosestIntersection(vec3 start, vec3 dir, Intersection& closestIntersection );
-vec3    Calculate_Intersection(Triangle triangle,vec3 start,vec3 dir);
+Intersection ClosestIntersection(Ray ray);
+vec3 getAmbientLighting(Intersection intersection);
+vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, int depth) ;
 
 vec3    DirectLight( const Intersection& intersection );
 void    SoftShadowPositions(vec3 positions[]);

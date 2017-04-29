@@ -12,7 +12,6 @@ Intersection Cube::intersect(Ray ray, int i) {
   Intersection intersection = Intersection();
   
   for (int j = 0; j < triangles.size(); ++j) {
-    //      intersection a = object.intersection;
     vec3 x =  Calculate_Intersection(triangles[j], ray.start, ray.dir);
     if(i != ray.objectIndex && Intersects(x))  {
       // If the current intersection is closer than previous, update
@@ -21,6 +20,8 @@ Intersection Cube::intersect(Ray ray, int i) {
         intersection.position = ray.start + x.x * ray.dir;
         intersection.triangleIndex = make_pair(i,j);
         intersection.didIntersect = true;
+        // Unit vector perpendicular to plane.
+        intersection.normal = glm::normalize(triangles[j].normal);
       }
     }
   }

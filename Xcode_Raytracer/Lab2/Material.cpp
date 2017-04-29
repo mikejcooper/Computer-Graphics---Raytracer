@@ -20,3 +20,11 @@ float Material::getReflectivity() {
 float Material::getRefractiveIndex() {
   return refractiveIndex;
 }
+
+float Material::getId() {
+  return id;
+}
+
+vec3 Material::getColor() {
+  return color;
+}

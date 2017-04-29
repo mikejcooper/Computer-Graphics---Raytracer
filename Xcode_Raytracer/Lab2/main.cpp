@@ -100,6 +100,38 @@ void Draw()
   SDL_UpdateRect( screen, 0, 0, 0, 0 );
 }
 
+
+vec3 traceRayFromCamera(float x , float y) {
+  // Get direction of camera
+  vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
+  direction = direction * camera.rotation;
+  Ray ray = Ray(camera.position, direction, NULLobjectIndex);
+  return getColor(ray, 0);
+}
+
+vec3 getColor(Ray ray, int depth){
+  
+  if(depth > MAX_DEPTH) return vec3(2,0,0);
+  
+//  float dispersion = 5.0f;
+//  vec3 disturbance((dispersion / RAND_MAX) * (1.0f * rand()), (dispersion / RAND_MAX) * (1.0f * rand()), 0.0f);
+  
+  Intersection closestIntersection = ClosestIntersection(ray);
+  
+  //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
+  if(closestIntersection.didIntersect) {
+    vec3 color = Objects[closestIntersection.triangleIndex.first]->material.getColor();
+    vec3 directLight = DirectLight(closestIntersection);
+    vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
+    return color * directLight + reflectedColor;
+  }
+  // No Intersection
+  else {
+    return vec3(0,0,0);
+  }
+}
+
+
 /*
  ClosestIntersection takes the start position of the ray and its direction and a std::vector of Triangles
  as input. It should then check for intersection against all these Triangles. If an
@@ -109,20 +141,20 @@ void Draw()
 Intersection ClosestIntersection(Ray ray){
   Intersection closestIntersection = Intersection();
   
-  int i = 0;
   for (vector<Object*>::iterator itr = Objects.begin(); itr < Objects.end(); itr++) {
-    Intersection intersection = (*itr)->intersect(ray, i);
+    
+    Intersection intersection = (*itr)->intersect(ray, int (itr - Objects.begin()));
     
     if(intersection.didIntersect && intersection.distance < closestIntersection.distance)  {
       closestIntersection = intersection;
     }
     
-    i++;
-    
   }
-  
   return closestIntersection;
 }
+
+vec3  indirectLight = 0.2f * vec3( 1, 1, 1 );
+
 
 vec3 DirectLight( const Intersection& intersection ){
   vec3 light(0.0f,0.0f,0.0f);
@@ -137,9 +169,8 @@ vec3 DirectLight( const Intersection& intersection ){
     // Distance from point of intersection to light
     float radius = glm::length(positions[k] - intersection.position);
     
-    Triangle triangle = Objects[objectIndex]->triangles[triangleIndex];
     // Unit vector perpendicular to plane.
-    vec3 normal = glm::normalize(triangle.normal);
+    vec3 normal = glm::normalize(intersection.normal);
     // Direct light intensity given distance/radius
     float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
     
@@ -148,18 +179,130 @@ vec3 DirectLight( const Intersection& intersection ){
     
     Intersection nearestTriangle = ClosestIntersection(ray);
     
+  
+    
     int nearestTriangleObjectIndex = nearestTriangle.triangleIndex.first;
     int nearestTriangleTriangleIndex = nearestTriangle.triangleIndex.second;
     if (objectIndex != nearestTriangleObjectIndex || triangleIndex != nearestTriangleTriangleIndex){
       // If intersection is closer to light source than self
-      if (nearestTriangle.distance < radius * 0.99f)
-        lightIntensity = 0; // Zero light intensity
+      if (nearestTriangle.distance < radius * 0.99f){
+//        float refractiveIndex = Objects[nearestTriangle.triangleIndex.first]->material.getRefractiveIndex();
+//        float shadowAlpha = (refractiveIndex == 0) ? 0.0f : 1.0f / 90.0f * refractiveIndex;
+//        lightIntensity = shadowAlpha; // Zero light intensity
+        lightIntensity = 0.0f;
+      }
     }
     
     light += ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
   return light + indirectLight;
 }
+
+
+
+
+float getReflectance(const vec3 normal, const vec3 incident, float n1, float n2) {
+  float n = n1 / n2;
+  float cosI = dot(-normal,incident);
+  float sinT2 = n * n * (1.0 - cosI * cosI);
+  
+  if (sinT2 > 1.0) {
+    // Total Internal Reflection.
+    return 1.0;
+  }
+  
+  float cosT = sqrt(1.0 - sinT2);
+  float r0rth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+  float rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+  return (r0rth * r0rth + rPar * rPar) / 2.0;
+}
+
+vec3 refractVector(const vec3 normal, const vec3 incident, float n1, float n2) {
+  float n = n1 / n2;
+  float cosI = dot(-normal,incident);
+  float sinT2 = n * n * (1.0 - cosI * cosI);
+  
+  if (sinT2 > 1.0) {
+    cerr << "Bad refraction vector!" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  float cosT = sqrt(1.0 - sinT2);
+  return incident * n + normal * (n * cosI - cosT);
+}
+
+
+vec3 reflectVector(vec3 vector, vec3 normal) {
+  return normal * 2.0f * dot(vector,normal) - vector;
+}
+
+vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, int depth) {
+    
+  float reflectivity = Objects[intersection.triangleIndex.first]->material.getReflectivity();
+  //  float startRefractiveIndex = intersection.startMaterial->getRefractiveIndex();
+  float startRefractiveIndex = 0.9f;
+  float endRefractiveIndex = Objects[intersection.triangleIndex.first]->material.getRefractiveIndex();
+  
+  int reflectionsRemaining = 1;
+  
+  vec3 normal = intersection.normal;
+  
+  /**
+   * Don't perform lighting if the object is not reflective or refractive or we have
+   * hit our recursion limit.
+   */
+  if ((reflectivity == 0.0f && endRefractiveIndex == 0.0f) || reflectionsRemaining <= 0) {
+    return vec3(0.0f,0.0f,0.0f);
+  }
+  
+  // Default to exclusively reflective values.
+  float reflectivePercentage = reflectivity;
+  float refractivePercentage = 0;
+  
+  
+  // Refractive index overrides the reflective property.
+  if (endRefractiveIndex != 0.0f) {
+    reflectivePercentage = getReflectance(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
+    
+    refractivePercentage = 1 - reflectivePercentage;
+  }
+  
+  // No ref{ra,le}ctive properties - bail early.
+  if (refractivePercentage <= 0 && reflectivePercentage <= 0) {
+    return vec3(0.0f,0.0f,0.0f);
+  }
+  
+  vec3 reflectiveColor;
+  vec3 refractiveColor;
+  
+  if (reflectivePercentage > 0) {
+    vec3 reflected = reflectVector(ray.start,
+                                   normal);
+    Ray reflectedRay(intersection.position, reflected, intersection.triangleIndex.first);
+    
+    
+    reflectiveColor = getColor(reflectedRay, depth + 1) * reflectivePercentage;
+  }
+  
+  if (refractivePercentage > 0) {
+    vec3 refracted = refractVector(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
+    Ray refractedRay = Ray(intersection.position, refracted, intersection.triangleIndex.first);
+    
+    refractiveColor = getColor(refractedRay, depth + 1) * refractivePercentage;
+  }
+  
+  return reflectiveColor + refractiveColor;
+}
+
+
+
+
+
+
+
+
+// -------------------------- EXTRAS --------------------------------------------
+
 
 void SoftShadowPositions(vec3 positions[]){
   // Set first ray projection to be at 'light position'
@@ -251,141 +394,6 @@ bool EdgeDectection(vec3 current_color, vec3 average_color){
 }
 
 
-
-
-
-
-
-
-float getReflectance(const vec3 normal, const vec3 incident, float n1, float n2) {
-  float n = n1 / n2;
-  float cosI = dot(-normal,incident);
-  float sinT2 = n * n * (1.0 - cosI * cosI);
-  
-  if (sinT2 > 1.0) {
-    // Total Internal Reflection.
-    return 1.0;
-  }
-  
-  float cosT = sqrt(1.0 - sinT2);
-  float r0rth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
-  float rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
-  return (r0rth * r0rth + rPar * rPar) / 2.0;
-}
-
-vec3 refractVector(const vec3 normal, const vec3 incident, float n1, float n2) {
-  float n = n1 / n2;
-  float cosI = dot(-normal,incident);
-  float sinT2 = n * n * (1.0 - cosI * cosI);
-  
-  if (sinT2 > 1.0) {
-    cerr << "Bad refraction vector!" << endl;
-    exit(EXIT_FAILURE);
-  }
-  
-  float cosT = sqrt(1.0 - sinT2);
-  return incident * n + normal * (n * cosI - cosT);
-}
-
-
-vec3 reflectVector(vec3 vector, vec3 normal) {
-  return normal * 2.0f * dot(vector,normal) - vector;
-}
-
-vec3 getAmbientLighting(Intersection intersection) {
-  return DirectLight(intersection) * Objects[intersection.triangleIndex.first]->triangles[intersection.triangleIndex.second].color;
-}
-
-vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, int depth) {
-  
-  float reflectivity = Objects[intersection.triangleIndex.first]->material.getReflectivity();
-  //  float startRefractiveIndex = intersection.startMaterial->getRefractiveIndex();
-  float startRefractiveIndex = 0.9f;
-  float endRefractiveIndex = Objects[intersection.triangleIndex.first]->material.getRefractiveIndex();
-  
-  int reflectionsRemaining = 1;
-  
-  vec3 normal = Objects[intersection.triangleIndex.first]->triangles[intersection.triangleIndex.second].normal;
-  
-  /**
-   * Don't perform lighting if the object is not reflective or refractive or we have
-   * hit our recursion limit.
-   */
-  if ((reflectivity == 0.0f && endRefractiveIndex == 0.0f) || reflectionsRemaining <= 0) {
-    return vec3(0.0f,0.0f,0.0f);
-  }
-  
-  // Default to exclusively reflective values.
-  float reflectivePercentage = reflectivity;
-  float refractivePercentage = 0;
-  
-  
-  // Refractive index overrides the reflective property.
-  if (endRefractiveIndex != 0.0f) {
-    reflectivePercentage = getReflectance(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
-    
-    refractivePercentage = 1 - reflectivePercentage;
-  }
-  
-  // No ref{ra,le}ctive properties - bail early.
-  if (refractivePercentage <= 0 && reflectivePercentage <= 0) {
-    return vec3(0.0f,0.0f,0.0f);
-  }
-  
-  vec3 reflectiveColor;
-  vec3 refractiveColor;
-  
-  if (reflectivePercentage > 0) {
-    vec3 reflected = reflectVector(ray.start,
-                                   normal);
-    Ray reflectedRay(intersection.position, reflected, intersection.triangleIndex.first);
-    
-    
-    reflectiveColor = getColor(reflectedRay, depth + 1) * reflectivePercentage;
-  }
-  
-  if (refractivePercentage > 0) {
-    vec3 refracted = refractVector(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
-    Ray refractedRay = Ray(intersection.position, refracted, intersection.triangleIndex.first);
-    
-    refractiveColor = getColor(refractedRay, depth + 1) * refractivePercentage;
-  }
-  
-  return reflectiveColor + refractiveColor;
-}
-
-vec3 getColor(Ray ray, int depth){
-  
-  if(depth > MAX_DEPTH) return vec3(2,0,0);
-  
-  Intersection closestIntersection = ClosestIntersection(ray);
-  vec3 color = vec3(0,0,0);
-  
-  //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
-  if(closestIntersection.didIntersect) {
-    vec3 ambientColor = getAmbientLighting(closestIntersection);
-    vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
-    return ambientColor + reflectedColor;
-  }
-  // No Intersection
-  else {
-    color = vec3(0,0,0);
-  }
-  
-  return color;
-}
-
-vec3 traceRayFromCamera(float x , float y) {
-  // Get direction of camera
-  vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
-  direction = direction * camera.rotation;
-  Ray ray = Ray(camera.position, direction, NULLobjectIndex);
-  
-  
-  return getColor(ray, 0);
-}
-
-
 void Calculate_DOF() {
   
   int DOF_KERNEL_SIZE = 8;
@@ -472,7 +480,7 @@ vec3 traceDofFromCamera1(float x, float y) {
       // Identify triangle, find colour and 'Put' corrisponding pixel
       int objectindex = closestIntersection.triangleIndex.first;
       int triangleindex = closestIntersection.triangleIndex.second;
-      vec3 color = Objects[objectindex]->triangles[triangleindex].color;
+      vec3 color = Objects[objectindex]->material.getColor();
       lightIntensity = DirectLight(closestIntersection);
       float weighting = 1 - (std::min(abs(closestIntersection.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
       average_color += color * weighting;

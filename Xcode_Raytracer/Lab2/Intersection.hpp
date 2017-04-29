@@ -22,6 +22,7 @@ using glm::vec3;
 class Intersection {
 public:
   vec3 position;
+  vec3 normal;
   float distance;
   std::pair <int, int> triangleIndex;
   bool didIntersect;

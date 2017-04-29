@@ -9,6 +9,8 @@
 #ifndef Material_hpp
 #define Material_hpp
 
+#include "glm/glm.hpp"
+using glm::vec3;
 
 /* Material */
 //typedef enum {
@@ -26,16 +28,20 @@ protected:
   float shininess;
   float reflectiveness;
   float refractiveIndex;
+  vec3 color;
+  int id;
 
 public:
-  Material (float _shininess, float _reflectiveness, float _refractiveIndex)
-    : shininess( _shininess ), reflectiveness( _reflectiveness ), refractiveIndex(_refractiveIndex) {}
+  Material (float _shininess, float _reflectiveness, float _refractiveIndex, int _id, vec3 _color)
+    : shininess( _shininess ), reflectiveness( _reflectiveness ), refractiveIndex(_refractiveIndex), id(_id), color(_color) {}
   
   Material() {};
   
   float getShininess();
   float getReflectivity();
   float getRefractiveIndex();
+  float getId();
+  vec3 getColor();
   
 };
 

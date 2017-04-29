@@ -38,6 +38,8 @@ int getVertexIndex(std::string vertex){
 }
 
 void LoadGenericmodel(std::vector<Object*> *Objects){
+  vec3 yellow( 0.75f, 0.75f, 0.15f );
+
   using glm::vec3;
   vector<Vertex> vertices;
   std::vector<Triangle> triangles;
@@ -102,11 +104,11 @@ void LoadGenericmodel(std::vector<Object*> *Objects){
     		// vertexCount = 0;
 	    	if(objectCounter > 0){
           if(objectNameCurrent[1] == 'C'){
-            Objects->push_back( new Cube(triangles, Diffuse()) );
+            Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
             cout << "Cube Objected Added\n";
           }
           else if(objectNameCurrent[1] == 'S'){
-            Objects->push_back( new Sphere(triangles, Diffuse()) );
+//            Objects->push_back( new Sphere(triangles, Diffuse(yellow)) );
             cout << "Sphere Objected Added\n";
           }
 
@@ -120,11 +122,11 @@ void LoadGenericmodel(std::vector<Object*> *Objects){
   
   //collect last object;
   if(objectNameCurrent[1] == 'C'){
-    Objects->push_back( new Cube(triangles, Diffuse()) );
+    Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
     cout << "Cube Objected Added\n";
   }
   else if(objectNameCurrent[1] == 'S'){
-    Objects->push_back( new Sphere(triangles, Diffuse()) );
+//    Objects->push_back( new Sphere(triangles, Diffuse(yellow)) );
     cout << "Sphere Objected Added\n";
   }
   // tempObject.vertices.clear();
@@ -150,6 +152,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   vec3 blue(   0.15f, 0.15f, 0.75f );
   vec3 purple( 0.75f, 0.15f, 0.75f );
   vec3 white(  0.75f, 0.75f, 0.75f );
+  vec3 trans(1.0f,1.0f,1.0f);
   
   triangles.clear();
   triangles.reserve( 5*2*3 );
@@ -174,30 +177,36 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle( C, B, A, green ) );
   triangles.push_back( Triangle( C, D, B, green ) );
   
-  Objects->push_back(new Cube(triangles, Diffuse()));
+  Objects->push_back(new Cube(triangles, Diffuse(green)));
   triangles.clear();
   
   // Left wall
   triangles.push_back( Triangle( A, E, C, purple ) );
   triangles.push_back( Triangle( C, E, G, purple ) );
   
-//  StoreAsObject(triangles, Objects, Diffuse());
-//  triangles.clear();
+  Objects->push_back(new Cube(triangles, Diffuse(purple)));
+  triangles.clear();
   
   // Right wall
   triangles.push_back( Triangle( F, B, D, yellow ) );
   triangles.push_back( Triangle( H, F, D, yellow ) );
-//  
-//  StoreAsObject(triangles, Objects, Phong());
-//  triangles.clear();
+  
+  Objects->push_back(new Cube(triangles, Diffuse(yellow)));
+  triangles.clear();
   
   // Ceiling
   triangles.push_back( Triangle( E, F, G, cyan ) );
   triangles.push_back( Triangle( F, H, G, cyan ) );
   
+  Objects->push_back(new Cube(triangles, Diffuse(cyan)));
+  triangles.clear();
+  
   // Back wall
   triangles.push_back( Triangle( G, D, C, white ) );
   triangles.push_back( Triangle( G, H, D, white ) );
+  
+  Objects->push_back(new Cube(triangles, Diffuse(white)));
+  triangles.clear();
   
   // ---------------------------------------------------------------------------
   // Short block
@@ -213,8 +222,6 @@ void LoadTestModel( std::vector<Object*> *Objects )
   H = vec3( 82,165,225);
   
   
-  Objects->push_back(new Cube(triangles, Diffuse()));
-  triangles.clear();
   
   // Front
   triangles.push_back( Triangle(E,B,A,red) );
@@ -236,7 +243,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle(G,F,E,red) );
   triangles.push_back( Triangle(G,H,F,red) );
   
-  Objects->push_back(new Cube(triangles, Diffuse()));
+  Objects->push_back(new Cube(triangles, Diffuse(red)));
   triangles.clear();
   
   // ---------------------------------------------------------------------------
@@ -272,33 +279,46 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle(G,F,E,blue) );
   triangles.push_back( Triangle(G,H,F,blue) );
   
-  Objects->push_back(new Cube(triangles, Diffuse()));
+  Objects->push_back(new Cube(triangles, Glass(blue)));
   triangles.clear();
+  
+  vec3 center = vec3(-0.3,0.7,-0.7);
+  float radius = 0.2f;
+  Material material = Phong(blue);
+  
+  Objects->push_back(new Sphere(center, radius, material));
+  
+  
+  
   
   
   // ----------------------------------------------
   // Scale to the volume [-1,1]^3
   
   for (vector<Object*>::iterator itr = Objects->begin(); itr < Objects->end(); itr++) {
-    vector<Triangle> t = (*itr)->triangles;
-    for (int j = 0; j < t.size(); ++j) {
-      (*itr)->triangles[j].v0 *= 2/L;
-      (*itr)->triangles[j].v1 *= 2/L;
-      (*itr)->triangles[j].v2 *= 2/L;
-      
-      (*itr)->triangles[j].v0 -= vec3(1,1,1);
-      (*itr)->triangles[j].v1 -= vec3(1,1,1);
-      (*itr)->triangles[j].v2 -= vec3(1,1,1);
-      
-      (*itr)->triangles[j].v0.x *= -1;
-      (*itr)->triangles[j].v1.x *= -1;
-      (*itr)->triangles[j].v2.x *= -1;
-      
-      (*itr)->triangles[j].v0.y *= -1;
-      (*itr)->triangles[j].v1.y *= -1;
-      (*itr)->triangles[j].v2.y *= -1;
-      
-      (*itr)->triangles[j].ComputeNormal();
+    if ((*itr)->getId() == 0){
+      //Is cube
+      Cube* obj = static_cast<Cube*>(*itr);
+      vector<Triangle> t = obj->triangles;
+      for (int j = 0; j < t.size(); ++j) {
+        obj->triangles[j].v0 *= 2/L;
+        obj->triangles[j].v1 *= 2/L;
+        obj->triangles[j].v2 *= 2/L;
+        
+        obj->triangles[j].v0 -= vec3(1,1,1);
+        obj->triangles[j].v1 -= vec3(1,1,1);
+        obj->triangles[j].v2 -= vec3(1,1,1);
+        
+        obj->triangles[j].v0.x *= -1;
+        obj->triangles[j].v1.x *= -1;
+        obj->triangles[j].v2.x *= -1;
+        
+        obj->triangles[j].v0.y *= -1;
+        obj->triangles[j].v1.y *= -1;
+        obj->triangles[j].v2.y *= -1;
+        
+        obj->triangles[j].ComputeNormal();
+      }
     }
   }
   

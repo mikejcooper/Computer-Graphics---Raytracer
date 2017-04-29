@@ -27,21 +27,17 @@ class Object
 {
 public:
   
-  std::vector<Triangle> triangles;
   Material material;
+  int id;
 
-  Object(std::vector<Triangle> _triangles, Material _material)
-  : triangles(_triangles), material(_material) {};
+  Object(Material _material, int _id)
+  : material(_material), id(_id) {};
   
   Object() {};
   
-  void addTriangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
-  {
-    Triangle triangle = Triangle(v0,v1,v2,color);
-    triangles.push_back(triangle);
-  }
-  
   virtual Intersection intersect(Ray, int) = 0;
+  
+  int getId();
 
 };
 

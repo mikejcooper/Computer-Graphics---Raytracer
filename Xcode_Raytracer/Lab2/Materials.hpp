@@ -17,24 +17,24 @@ class Glass : public Material {
 
 public:
 //  float _shininess, float _reflectiveness, float _refractiveIndex
-  Glass ()
-  : Material(50.0f, 0.0f, 2.0f) {}
+  Glass (vec3 color)
+  : Material(50.0f, 0.0f, 2.0f, 2, color) {}
 };
 
 class Phong : public Material {
   
 public:
   //  float _shininess, float _reflectiveness, float _refractiveIndex
-  Phong ()
-  : Material(100.0f, 0.9f, 0.0f) {}
+  Phong (vec3 color)
+  : Material(100.0f, 0.9f, 0.0f, 1, color) {}
 };
 
 class Diffuse : public Material {
   
 public:
   //  float _shininess, float _reflectiveness, float _refractiveIndex
-  Diffuse ()
-  : Material(0.0f, 0.0f, 0.0f) {}
+  Diffuse (vec3 color)
+  : Material(0.0f, 0.0f, 0.0f, 0, color) {}
 };
 
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C69D99A61EB4A71C008B9E62 /* Boundaries.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C69D99A41EB4A71C008B9E62 /* Boundaries.cpp */; };
 		C6A1A33A1E8C68FF003915F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6A1A3391E8C68FF003915F2 /* main.cpp */; };
 		C6CD0D261EAA1CC600F6AB1A /* Raytracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */; };
 		C6CD0D291EAA1D5100F6AB1A /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D271EAA1D5100F6AB1A /* Color.cpp */; };
@@ -132,6 +133,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C69D99A41EB4A71C008B9E62 /* Boundaries.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Boundaries.cpp; sourceTree = "<group>"; };
+		C69D99A51EB4A71C008B9E62 /* Boundaries.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Boundaries.hpp; sourceTree = "<group>"; };
 		C6A1A3391E8C68FF003915F2 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C6A1A33B1E8C690A003915F2 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Raytracer.cpp; sourceTree = "<group>"; };
@@ -464,6 +467,8 @@
 				C6FD91221EAD2D3E0083BA6A /* Object.hpp */,
 				C6FD91271EAD39820083BA6A /* Sphere.cpp */,
 				C6FD91281EAD39820083BA6A /* Sphere.hpp */,
+				C69D99A41EB4A71C008B9E62 /* Boundaries.cpp */,
+				C69D99A51EB4A71C008B9E62 /* Boundaries.hpp */,
 				C6FD91241EAD36EE0083BA6A /* Cube.cpp */,
 				C6FD91251EAD36EE0083BA6A /* Cube.hpp */,
 				CE34F75F1CDA80FA00D6BBED /* TestModel.h */,
@@ -927,6 +932,7 @@
 				C6E7F8161EAA773F0099B632 /* Control.cpp in Sources */,
 				C6E7F8221EAA91D70099B632 /* Materials.cpp in Sources */,
 				C6FD91261EAD36EE0083BA6A /* Cube.cpp in Sources */,
+				C69D99A61EB4A71C008B9E62 /* Boundaries.cpp in Sources */,
 				C6CD0D2C1EAA201100F6AB1A /* Intersection.cpp in Sources */,
 				C6E7F8191EAA78200099B632 /* Triangle.cpp in Sources */,
 				C6FD91291EAD39820083BA6A /* Sphere.cpp in Sources */,

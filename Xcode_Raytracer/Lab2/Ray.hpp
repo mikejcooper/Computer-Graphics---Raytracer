@@ -18,13 +18,21 @@ class Ray {
 public:
   vec3 start;
   vec3 dir;
+  vec3 fractionalDir;
   int objectIndex;
   
   Ray()
     : start ( vec3() ), dir( vec3() ), objectIndex( -1 ) {}
   
   Ray(vec3 _start, vec3 _dir, int _objectIndex)
-    : start ( _start ), dir( _dir ), objectIndex( _objectIndex )  {}
+    : start ( _start ), dir( _dir ), objectIndex( _objectIndex )
+  {
+    calcFractionalDirection();
+  }
+  
+private:
+  void calcFractionalDirection();
+
 };
 
 #endif /* Ray_hpp */

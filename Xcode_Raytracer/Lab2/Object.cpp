@@ -7,3 +7,7 @@
 //
 
 #include "Object.hpp"
+
+int Object::getId(){
+  return id;
+}
