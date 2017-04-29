@@ -18,7 +18,7 @@ Intersection Cube::intersect(Ray ray, int i) {
       if(intersection.distance > x.x) {
         intersection.distance = x.x;
         intersection.position = ray.start + x.x * ray.dir;
-        intersection.triangleIndex = make_pair(i,j);
+        intersection.objIndex = i;
         intersection.didIntersect = true;
         // Unit vector perpendicular to plane.
         intersection.normal = glm::normalize(triangles[j].normal);

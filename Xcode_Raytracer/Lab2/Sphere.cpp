@@ -63,7 +63,7 @@ Intersection Sphere::intersect(Ray ray, int i) {
   Intersection intersection = Intersection();
   intersection.position = point;
   intersection.distance = distance;
-  intersection.triangleIndex = make_pair(i, 0);
+  intersection.objIndex = i;
   intersection.didIntersect = true;
   intersection.normal = normal;
 

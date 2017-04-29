@@ -109,6 +109,11 @@ vec3 traceRayFromCamera(float x , float y) {
   return getColor(ray, 0);
 }
 
+
+vec3  indirectLight = 0.2f * vec3( 1, 1, 1 );
+
+
+
 vec3 getColor(Ray ray, int depth){
   
   if(depth > MAX_DEPTH) return vec3(2,0,0);
@@ -120,7 +125,7 @@ vec3 getColor(Ray ray, int depth){
   
   //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
   if(closestIntersection.didIntersect) {
-    vec3 color = Objects[closestIntersection.triangleIndex.first]->material.getColor();
+    vec3 color = Objects[closestIntersection.objIndex]->material.getColor();
     vec3 directLight = DirectLight(closestIntersection);
     vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
     return color * directLight + reflectedColor;
@@ -153,15 +158,13 @@ Intersection ClosestIntersection(Ray ray){
   return closestIntersection;
 }
 
-vec3  indirectLight = 0.2f * vec3( 1, 1, 1 );
 
 
 vec3 DirectLight( const Intersection& intersection ){
   vec3 light(0.0f,0.0f,0.0f);
   vec3 positions[100];
   SoftShadowPositions(positions);
-  int objectIndex = intersection.triangleIndex.first;
-  int triangleIndex = intersection.triangleIndex.second;
+  int objectIndex = intersection.objIndex;
   
   for (int k = 0; k < control.SOFT_SHADOWS_SAMPLES; k++) {
     // Unit vector from point of intersection to light
@@ -180,16 +183,15 @@ vec3 DirectLight( const Intersection& intersection ){
     Intersection nearestTriangle = ClosestIntersection(ray);
     
   
-    
-    int nearestTriangleObjectIndex = nearestTriangle.triangleIndex.first;
-    int nearestTriangleTriangleIndex = nearestTriangle.triangleIndex.second;
-    if (objectIndex != nearestTriangleObjectIndex || triangleIndex != nearestTriangleTriangleIndex){
+//    
+    int nearestTriangleObjectIndex = nearestTriangle.objIndex;
+    if (objectIndex != nearestTriangleObjectIndex){
       // If intersection is closer to light source than self
       if (nearestTriangle.distance < radius * 0.99f){
-//        float refractiveIndex = Objects[nearestTriangle.triangleIndex.first]->material.getRefractiveIndex();
-//        float shadowAlpha = (refractiveIndex == 0) ? 0.0f : 1.0f / 90.0f * refractiveIndex;
-//        lightIntensity = shadowAlpha; // Zero light intensity
-        lightIntensity = 0.0f;
+        float refractiveIndex = Objects[nearestTriangle.objIndex]->material.getRefractiveIndex();
+        float shadowAlpha = (refractiveIndex == 0) ? 0.0f : 1.0f / 90.0f * refractiveIndex;
+        lightIntensity = shadowAlpha; // Zero light intensity
+//        lightIntensity = 0.0f;
       }
     }
     
@@ -238,10 +240,10 @@ vec3 reflectVector(vec3 vector, vec3 normal) {
 
 vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, int depth) {
     
-  float reflectivity = Objects[intersection.triangleIndex.first]->material.getReflectivity();
+  float reflectivity = Objects[intersection.objIndex]->material.getReflectivity();
   //  float startRefractiveIndex = intersection.startMaterial->getRefractiveIndex();
   float startRefractiveIndex = 0.9f;
-  float endRefractiveIndex = Objects[intersection.triangleIndex.first]->material.getRefractiveIndex();
+  float endRefractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
   
   int reflectionsRemaining = 1;
   
@@ -278,7 +280,7 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   if (reflectivePercentage > 0) {
     vec3 reflected = reflectVector(ray.start,
                                    normal);
-    Ray reflectedRay(intersection.position, reflected, intersection.triangleIndex.first);
+    Ray reflectedRay(intersection.position, reflected, intersection.objIndex);
     
     
     reflectiveColor = getColor(reflectedRay, depth + 1) * reflectivePercentage;
@@ -286,7 +288,7 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   
   if (refractivePercentage > 0) {
     vec3 refracted = refractVector(normal, ray.dir, startRefractiveIndex, endRefractiveIndex);
-    Ray refractedRay = Ray(intersection.position, refracted, intersection.triangleIndex.first);
+    Ray refractedRay = Ray(intersection.position, refracted, intersection.objIndex);
     
     refractiveColor = getColor(refractedRay, depth + 1) * refractivePercentage;
   }
@@ -478,8 +480,7 @@ vec3 traceDofFromCamera1(float x, float y) {
     // If ray casting from camera position hits a triangle
     if(closestIntersection.didIntersect) {
       // Identify triangle, find colour and 'Put' corrisponding pixel
-      int objectindex = closestIntersection.triangleIndex.first;
-      int triangleindex = closestIntersection.triangleIndex.second;
+      int objectindex = closestIntersection.objIndex;
       vec3 color = Objects[objectindex]->material.getColor();
       lightIntensity = DirectLight(closestIntersection);
       float weighting = 1 - (std::min(abs(closestIntersection.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );

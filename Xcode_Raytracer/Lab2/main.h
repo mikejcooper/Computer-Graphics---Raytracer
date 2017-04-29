@@ -125,3 +125,96 @@ float max(float a,float b){
     return b;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//bool isInShadow(const Ray& ray, double lightDistance) {
+//  Intersection intersection = ClosestIntersection(ray);
+//  
+//  return intersection.didIntersect && intersection.distance < lightDistance;
+//}
+//
+//vec3 getSpecularLighting(const Intersection& intersection, Light* light, const Ray& ray) {
+//  vec3 specularColor(0.0, 0.0, 0.0);
+//  float shininess = Objects[intersection.triangleIndex.first]->material.getShininess();
+//  
+//  if (shininess == 0.0) {
+//    /* Don't perform specular lighting on non shiny objects. */
+//    return specularColor;
+//  }
+//  
+//  vec3 view = normalize(ray.start - intersection.position);
+//  vec3 lightOffset = light->position - intersection.position;
+//  
+//  vec3 reflected = intersection.normal * 2.0f * glm::dot(normalize(lightOffset),intersection.normal) - normalize(lightOffset);
+//  
+//  
+//  float dot = glm::dot(view,reflected);
+//  
+//  if (dot <= 0) {
+//    return specularColor;
+//  }
+//  
+//  vec3 specularAmount = pow(dot, shininess) * light->color;
+//  
+//  return specularAmount;
+//}
+//
+//vec3 getDiffuseAndSpecularLighting(Intersection intersection, vec3 color, const Ray& ray){
+//  vec3 diffuseColor(0.0, 0.0, 0.0);
+//  vec3 specularColor(0.0, 0.0, 0.0);
+//  
+//  for (vector<Light>::iterator itr = Lights.begin(); itr < Lights.end(); itr++) {
+//    Light light = *itr;
+//    vec3 lightOffset = light.position - intersection.position;
+//    float lightDistance = lightOffset.length();
+//    /**
+//     * TODO: Be careful about normalizing lightOffset too.
+//     */
+//    vec3 lightDirection = normalize(lightOffset);
+//    float dotProduct = dot(intersection.normal,lightDirection);
+//    
+//    /**
+//     * Intersection is facing light.
+//     */
+//    if (dotProduct >= 0.0f) {
+//      Ray shadowRay = Ray(intersection.position, lightDirection, intersection.triangleIndex.first);
+//      
+//      if (isInShadow(shadowRay, lightDistance)) {
+//        /**
+//         * Position is in shadow of another object - continue with other lights.
+//         */
+//        continue;
+//      }
+//      
+//      diffuseColor = (diffuseColor + (color * dotProduct)) *
+//      light.color;
+//      specularColor = specularColor + getSpecularLighting(intersection, &light, ray);
+//    }
+//  }
+//  
+//  return diffuseColor + specularColor;
+//  
+//}
+//
+

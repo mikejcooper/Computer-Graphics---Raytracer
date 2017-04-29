@@ -208,11 +208,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515152832.251901"
+            timestampString = "515166375.659404"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "145"
-            endingLineNumber = "145"
+            startingLineNumber = "150"
+            endingLineNumber = "150"
             landmarkName = "ClosestIntersection(Ray ray)"
             landmarkType = "9">
             <Locations>
@@ -301,11 +301,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515163985.102004"
+            timestampString = "515167646.469367"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "254"
-            endingLineNumber = "254"
+            startingLineNumber = "256"
+            endingLineNumber = "256"
             landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
             landmarkType = "9">
          </BreakpointContent>
@@ -317,11 +317,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515163985.102004"
+            timestampString = "515167646.469367"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "263"
-            endingLineNumber = "263"
+            startingLineNumber = "265"
+            endingLineNumber = "265"
             landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
             landmarkType = "9">
          </BreakpointContent>
@@ -333,11 +333,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515163985.102004"
+            timestampString = "515167646.469367"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "264"
-            endingLineNumber = "264"
+            startingLineNumber = "266"
+            endingLineNumber = "266"
             landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
             landmarkType = "9">
          </BreakpointContent>
@@ -349,11 +349,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515163985.102004"
+            timestampString = "515167646.469367"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "230"
-            endingLineNumber = "230"
+            startingLineNumber = "232"
+            endingLineNumber = "232"
             landmarkName = "refractVector(const vec3 normal, const vec3 incident, float n1, float n2)"
             landmarkType = "9">
          </BreakpointContent>
@@ -372,6 +372,22 @@
             endingLineNumber = "301"
             landmarkName = "LoadTestModel( std::vector&lt;Object*&gt; *Objects )"
             landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Lab2/Intersection.hpp"
+            timestampString = "515167431.179323"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "32"
+            endingLineNumber = "32"
+            landmarkName = "Intersection()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
