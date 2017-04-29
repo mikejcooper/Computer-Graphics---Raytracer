@@ -22,6 +22,7 @@ Intersection Cube::intersect(Ray ray, int i) {
         intersection.didIntersect = true;
         // Unit vector perpendicular to plane.
         intersection.normal = glm::normalize(triangles[j].normal);
+        intersection.objIndexPrevious = ray.objectIndex;
       }
     }
   }

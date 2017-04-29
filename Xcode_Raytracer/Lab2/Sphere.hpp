@@ -37,6 +37,7 @@ public:
   virtual Intersection intersect(Ray, int);
   virtual Boundaries getBounds();
   
+  
 private:
   vec3 getColor(vec3);
   

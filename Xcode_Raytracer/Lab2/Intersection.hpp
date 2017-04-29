@@ -25,11 +25,12 @@ public:
   vec3 normal;
   float distance;
   int objIndex;
+  int objIndexPrevious;
   bool didIntersect;
 
   
   Intersection()
-  : position( vec3() ), distance( 5000.0f ), objIndex( -1 ), didIntersect( false ) {}
+  : position( vec3() ), distance( 5000.0f ), objIndex( -1 ), objIndexPrevious(-1), didIntersect( false ) {}
   
   vec3 Calculate_Intersection(Triangle, vec3, vec3);
   bool Intersects(vec3);

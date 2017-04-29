@@ -49,7 +49,7 @@ Intersection Sphere::intersect(Ray ray, int i) {
     return Intersection(); // No intersection.
   }
   
-  vec3 point = ray.start + (ray.dir * distance);
+  vec3 point = ray.start + (ray.dir * distance * 0.97f);
   vec3 normal = glm::normalize(point - centre);
   
 //  normal = material.modifyNormal(normal, point);
@@ -66,6 +66,7 @@ Intersection Sphere::intersect(Ray ray, int i) {
   intersection.objIndex = i;
   intersection.didIntersect = true;
   intersection.normal = normal;
+  intersection.objIndexPrevious = ray.objectIndex;
 
   
   return intersection;

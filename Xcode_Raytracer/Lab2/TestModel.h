@@ -280,12 +280,12 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle(G,F,E,blue) );
   triangles.push_back( Triangle(G,H,F,blue) );
   
-  Objects->push_back(new Cube(triangles, Phong(blue)));
+  Objects->push_back(new Cube(triangles, Diffuse(blue)));
   triangles.clear();
   
   vec3 center = vec3(-0.3,0.7,-0.7);
   float radius = 0.2f;
-  Material material = Phong(green);
+  Material material = Glass(green);
   
   Objects->push_back(new Sphere(center, radius, material));
   
