@@ -49,9 +49,12 @@ int main( int argc, char* argv[] )
   {
     t = Update(t);
     Draw();
+    if(control.TAKEPICTURE){
+      SDL_SaveBMP( screen, "screenshot.bmp" );
+      return 0;
+    }
   }
   
-  SDL_SaveBMP( screen, "screenshot1.bmp" );
   return 0;
 }
 
@@ -126,10 +129,10 @@ vec3 getColor(Ray ray, int depth){
     vec3 color = Objects[closestIntersection.objIndex]->material.getColor();
     vec3 directLight = DirectLight(closestIntersection);
     vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
-    if(Objects[closestIntersection.objIndex]->material.getId() == 3){
-      
-      return directLight*0.4f + reflectedColor;
-    }
+//    if(Objects[closestIntersection.objIndex]->material.getId() == 3){
+//      
+//      return directLight*0.4f + reflectedColor;
+//    }
     return color * directLight + reflectedColor;
   }
   // No Intersection

@@ -43,6 +43,7 @@ public:
   bool  MOVEMENT;
   bool  SHOW_EDGES;
   bool  DOF;
+  bool  TAKEPICTURE;
   
   Control(){};
   
@@ -62,6 +63,7 @@ public:
     MOVEMENT = true;
     SHOW_EDGES = false;
     DOF = false;
+    TAKEPICTURE = false;
   
   }
   

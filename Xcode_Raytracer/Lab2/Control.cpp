@@ -105,6 +105,11 @@ void Control::Features(uint8_t* keystate){
       cout << "Show Edges " << SHOW_EDGES << endl;
       while (keystate[SDLK_e]) SDL_PumpEvents();
     }
+    if(keystate[SDLK_p]){
+      TAKEPICTURE = (TAKEPICTURE) ? false : true;
+      cout << "Take Picture " << TAKEPICTURE << endl;
+      while (keystate[SDLK_p]) SDL_PumpEvents();
+    }
     //    if(keystate[SDLK_d]){
     //      DOF = (DOF) ? false : true;
     //      cout << "Show Depth of Field " << DOF << endl;

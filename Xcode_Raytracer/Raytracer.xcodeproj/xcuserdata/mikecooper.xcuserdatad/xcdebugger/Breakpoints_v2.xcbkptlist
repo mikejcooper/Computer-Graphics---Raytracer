@@ -96,11 +96,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/TestModel.h"
-            timestampString = "515196109.170661"
+            timestampString = "515243110.214499"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "247"
-            endingLineNumber = "247"
+            startingLineNumber = "248"
+            endingLineNumber = "248"
             landmarkName = "LoadTestModel( std::vector&lt;Object*&gt; *Objects )"
             landmarkType = "9">
          </BreakpointContent>
@@ -160,11 +160,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/TestModel.h"
-            timestampString = "515196109.170661"
+            timestampString = "515243110.214499"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "282"
-            endingLineNumber = "282"
+            startingLineNumber = "283"
+            endingLineNumber = "283"
             landmarkName = "LoadTestModel( std::vector&lt;Object*&gt; *Objects )"
             landmarkType = "9">
          </BreakpointContent>
@@ -208,11 +208,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515239370.51934"
+            timestampString = "515241093.418594"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "152"
-            endingLineNumber = "152"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
             landmarkName = "ClosestIntersection(Ray ray)"
             landmarkType = "9">
             <Locations>
@@ -301,11 +301,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/TestModel.h"
-            timestampString = "515196109.170661"
+            timestampString = "515243110.214499"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "301"
-            endingLineNumber = "301"
+            startingLineNumber = "310"
+            endingLineNumber = "310"
             landmarkName = "LoadTestModel( std::vector&lt;Object*&gt; *Objects )"
             landmarkType = "9">
          </BreakpointContent>
@@ -333,11 +333,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515239370.51934"
+            timestampString = "515241093.418594"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "237"
-            endingLineNumber = "237"
+            startingLineNumber = "240"
+            endingLineNumber = "240"
             landmarkName = "fresnel(const vec3 I, const vec3 N, const float ior)"
             landmarkType = "9">
          </BreakpointContent>
@@ -349,11 +349,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515239370.51934"
+            timestampString = "515241093.418594"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "258"
-            endingLineNumber = "258"
+            startingLineNumber = "261"
+            endingLineNumber = "261"
             landmarkName = "refract(const vec3 I, const vec3 N, const float ior)"
             landmarkType = "9">
          </BreakpointContent>
@@ -365,11 +365,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515239370.51934"
+            timestampString = "515241093.418594"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
+            startingLineNumber = "309"
+            endingLineNumber = "309"
             landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
             landmarkType = "9">
          </BreakpointContent>
@@ -381,11 +381,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515239370.51934"
+            timestampString = "515241093.418594"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
+            startingLineNumber = "309"
+            endingLineNumber = "309"
             landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
             landmarkType = "9">
          </BreakpointContent>
