@@ -208,11 +208,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515173441.762734"
+            timestampString = "515239370.51934"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "148"
-            endingLineNumber = "148"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
             landmarkName = "ClosestIntersection(Ray ray)"
             landmarkType = "9">
             <Locations>
@@ -333,11 +333,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515196426.677124"
+            timestampString = "515239370.51934"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "233"
-            endingLineNumber = "233"
+            startingLineNumber = "237"
+            endingLineNumber = "237"
             landmarkName = "fresnel(const vec3 I, const vec3 N, const float ior)"
             landmarkType = "9">
          </BreakpointContent>
@@ -349,12 +349,44 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515196426.677124"
+            timestampString = "515239370.51934"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "254"
-            endingLineNumber = "254"
+            startingLineNumber = "258"
+            endingLineNumber = "258"
             landmarkName = "refract(const vec3 I, const vec3 N, const float ior)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Lab2/main.cpp"
+            timestampString = "515239370.51934"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "306"
+            endingLineNumber = "306"
+            landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Lab2/main.cpp"
+            timestampString = "515239370.51934"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "306"
+            endingLineNumber = "306"
+            landmarkName = "getReflectiveRefractiveLighting(const Intersection&amp; intersection, Ray ray, int depth)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

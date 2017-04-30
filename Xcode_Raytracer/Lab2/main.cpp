@@ -126,6 +126,10 @@ vec3 getColor(Ray ray, int depth){
     vec3 color = Objects[closestIntersection.objIndex]->material.getColor();
     vec3 directLight = DirectLight(closestIntersection);
     vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
+    if(Objects[closestIntersection.objIndex]->material.getId() == 3){
+      
+      return directLight*0.4f + reflectedColor;
+    }
     return color * directLight + reflectedColor;
   }
   // No Intersection
@@ -274,25 +278,32 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   float refractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
   
   float bias_tmp = 0.1f;
-  float kr;
-  kr = fresnel(ray.dir, intersection.normal, refractiveIndex);
+  float kr = fresnel(ray.dir, intersection.normal, refractiveIndex);
   bool outside = dot(ray.dir,intersection.normal) < 0;
   vec3 bias = bias_tmp * intersection.normal;
+  
   // compute refraction if it is not a case of total internal reflection
-  if (kr < 1 && refractiveIndex > 1) {
+  if (kr < 1 && refractiveIndex > 1)
+  {
     vec3 refractionDirection = normalize(refract(ray.dir, intersection.normal, refractiveIndex));
     vec3 refractionRayOrig = outside ? intersection.position - bias : intersection.position + bias;
     Ray refractRay = Ray(refractionRayOrig, refractionDirection, intersection.objIndex);
     refractiveColor = getColor(refractRay, depth+1);
   }
-  if(reflectivity > 0){
+  
+  if(reflectivity > 0)
+  {
     vec3 reflected = reflectVector(ray.start, intersection.normal);
     vec3 reflectionRayOrig = outside ? intersection.position + bias : intersection.position - bias;
     Ray reflectedRay(reflectionRayOrig, reflected, intersection.objIndex);
     reflectiveColor = getColor(reflectedRay, depth + 1);
+    
+    if(refractiveIndex <= 1)
+    {
+      return reflectiveColor * reflectivity;
+    }
+    
   }
-  
-  
   // mix the two
   return  reflectiveColor * kr + refractiveColor * (1 - kr);
   
@@ -305,7 +316,6 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
 //  
 //  return reflectiveColor + refractiveColor;
 }
-
 
 
 

@@ -26,7 +26,7 @@ class Phong : public Material {
 public:
   //  float _shininess, float _reflectiveness, float _refractiveIndex
   Phong (vec3 color)
-  : Material(0.1f, 0.6f, 1.0f, 0, color) {}
+  : Material(0.1f, 0.6f, 1.0f, 1, color) {}
 //  : Material(100.0f, 0.9f, 0.0f, 1, color) {}
 };
 
@@ -36,6 +36,14 @@ public:
   //  float _shininess, float _reflectiveness, float _refractiveIndex
   Diffuse (vec3 color)
   : Material(0.0f, 0.0f, 1.0f, 0, color) {}
+};
+
+class Mirror : public Material {
+  
+public:
+  //  float _shininess, float _reflectiveness, float _refractiveIndex
+  Mirror (vec3 color)
+  : Material(5.0f, 1.0f, 1.0f, 3, vec3(5,5,5)) {}
 };
 
 
