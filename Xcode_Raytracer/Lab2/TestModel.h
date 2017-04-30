@@ -171,7 +171,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   vec3 F(0,L,0);
   vec3 G(L,L,L);
   vec3 H(0,L,L);
-    
+  
   // Floor:
   triangles.push_back( Triangle( C, B, A, green ) );
   triangles.push_back( Triangle( C, D, B, green ) );
@@ -283,13 +283,13 @@ void LoadTestModel( std::vector<Object*> *Objects )
   
   vec3 center = vec3(-0.5,0.4,-0.5);
   float radius = 0.2f;
-  Material material = Phong(red);
+  Material material = Mirror(red);
   
   Objects->push_back(new Sphere(center, radius, material));
 
   center = vec3(-0.0,0.1,-0.5);
   radius = 0.2f;
-  material = Phong(red);
+  material = Mirror(red);
   
   Objects->push_back(new Sphere(center, radius, material));
 
