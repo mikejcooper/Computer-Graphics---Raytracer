@@ -45,7 +45,7 @@ int main( int argc, char* argv[] )
 
   control = Control(&Lights[0].position, &camera);
   
-  
+  loadExamplePositions();
   
   while( NoQuitMessageSDL() )
   {
@@ -88,6 +88,25 @@ void Draw()
   
   if (control.DOF_VALUE > 1){
     Calculate_DOF();
+  }
+  if (control.PRINTLOCATION){
+    vec3 lights = Lights[0].position;
+    vec3 cameraPos = camera.position;
+    mat3 cameraRot = camera.rotation;
+    cout << "lightPosEx.push_back(vec3(" << lights.x << ", " << lights.y << ", " << lights.z << "));" << endl;
+    cout << "cameraPosEx.push_back(vec3(" << cameraPos.x << ", " << cameraPos.y << ", " << cameraPos.z << "));" << endl;
+    
+    cout << "rotationEx.push_back(mat3(" << cameraRot[0].x << ", " << cameraRot[0].y << ", " << cameraRot[0].z << ", " <<
+                   cameraRot[1].x << ", " << cameraRot[1].y << ", " << cameraRot[1].z << ", " <<
+                   cameraRot[2].x << ", " << cameraRot[2].y << ", " << cameraRot[2].z <<
+    "));" << endl;
+    
+    
+//    lightPosEx.push_back(vec3(0, 0, -3));
+//    rotationEx.push_back(mat3(1, 0, 0, 0, 1, 0, 0, 0, 1));
+//    
+    
+    control.PRINTLOCATION = false;
   }
   
   
@@ -157,7 +176,7 @@ vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
   vec3 intersectPosition = outside ? intersection.position - bias : intersection.position + bias;
 
 
-  float N = 512;// / (depth + 1);
+  float N = 32;// / (depth + 1);
   vec3 Nt; // Perpendicular to Normal
   vec3 Nb; // Perpendicular to Normal and Nt
   // Compute shaded point coordinate system using normal N. Co-System: N, Nt, Nb.
@@ -183,10 +202,7 @@ vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
 vec3 getColor(Ray ray, int depth){
   
   if(depth > MAX_DEPTH || (depth == 1 && !ray.isPrimary)) return vec3(0,0,0);
-  
-//  float dispersion = 5.0f;
-//  vec3 disturbance((dispersion / RAND_MAX) * (1.0f * rand()), (dispersion / RAND_MAX) * (1.0f * rand()), 0.0f);
-  
+    
   Intersection closestIntersection = ClosestIntersection(ray);
   
   //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
@@ -195,10 +211,6 @@ vec3 getColor(Ray ray, int depth){
     vec3 _indirectLight = IndirectLight(closestIntersection, ray, depth);
     vec3 _directLight = DirectLight(closestIntersection);
     vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
-//    if(Objects[closestIntersection.objIndex]->material.getId() == 3){
-//      
-//      return directLight*0.4f + reflectedColor;
-//    }
     return color * (_directLight + _indirectLight) + reflectedColor;
   }
   // No Intersection
@@ -253,7 +265,7 @@ vec3 getSpecularLighting(const Intersection& intersection, Light* light, const R
     return specularColor;
   }
   
-  vec3 specularAmount = pow(dot, shininess) * light->color * 0.005f;
+  vec3 specularAmount = pow(dot, shininess) * light->color * 0.01f;
     
   return specularAmount;
 }

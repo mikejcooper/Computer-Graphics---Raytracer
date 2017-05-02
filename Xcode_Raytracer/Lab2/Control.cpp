@@ -120,6 +120,11 @@ void Control::Features(uint8_t* keystate){
       cout << "Global Illumination " << GLOBALILLUMINATION << endl;
       while (keystate[SDLK_g]) SDL_PumpEvents();
     }
+    if(keystate[SDLK_z]){
+      PRINTLOCATION = (PRINTLOCATION) ? false : true;
+      cout << "Printing info... " << PRINTLOCATION << endl;
+      while (keystate[SDLK_z]) SDL_PumpEvents();
+    }
     //    if(keystate[SDLK_d]){
     //      DOF = (DOF) ? false : true;
     //      cout << "Show Depth of Field " << DOF << endl;

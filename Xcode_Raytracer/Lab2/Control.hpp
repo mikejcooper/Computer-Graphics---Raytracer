@@ -16,6 +16,7 @@
 #include "Camera.hpp"
 #include <math.h>
 #include <iostream>
+#include <array>
 
 
 
@@ -26,6 +27,7 @@ using namespace std;
 
 
 class Control {
+
   
 public:
   vec3* lightPos;
@@ -46,6 +48,9 @@ public:
   bool  TAKEPICTURE;
   bool  KDTREE;
   bool  GLOBALILLUMINATION;
+  bool  PRINTLOCATION;
+  
+
   
   Control(){};
   
@@ -68,6 +73,7 @@ public:
     TAKEPICTURE = false;
     KDTREE = false;
     GLOBALILLUMINATION = false;
+    PRINTLOCATION = false;
   
   }
   
