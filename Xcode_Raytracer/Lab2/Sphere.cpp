@@ -66,8 +66,7 @@ Intersection Sphere::intersect(Ray ray, int i) {
   intersection.objIndex = i;
   intersection.didIntersect = true;
   intersection.normal = normal;
-  intersection.objIndexPrevious = ray.objectIndex;
-
+  intersection.subIndex = -1;
   
   return intersection;
 //  return Intersection(ray, point, distance, normal, ray.material, material, this);
@@ -75,8 +74,14 @@ Intersection Sphere::intersect(Ray ray, int i) {
 //  : position( vec3() ), distance( 5000.0f ), triangleIndex( std::pair <int, int>() ), didIntersect( false ) {}
 
   
-
 }
+
+
+vec3 Sphere::getNormal(int subIndex, vec3 intersectPosition) {
+  vec3 N = normalize(intersectPosition - centre);
+  return N;
+}
+
 
 Boundaries Sphere::getBounds() {
   return bounds;

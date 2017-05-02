@@ -36,6 +36,7 @@ public:
   
   virtual Intersection intersect(Ray, int) = 0;
   virtual Boundaries getBounds() = 0;
+  virtual vec3 getNormal(int, vec3) = 0;
 
   
   int getId();

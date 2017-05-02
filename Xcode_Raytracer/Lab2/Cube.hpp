@@ -27,6 +27,8 @@ public:
   
   virtual Intersection intersect(Ray, int);
   virtual Boundaries getBounds();
+  virtual vec3 getNormal(int, vec3);
+
   
   vec3 Calculate_Intersection(Triangle, vec3, vec3);
   void Update_Bounds();

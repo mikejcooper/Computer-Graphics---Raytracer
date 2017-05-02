@@ -22,7 +22,7 @@ Intersection Cube::intersect(Ray ray, int i) {
         intersection.didIntersect = true;
         // Unit vector perpendicular to plane.
         intersection.normal = glm::normalize(triangles[j].normal);
-        intersection.objIndexPrevious = ray.objectIndex;
+        intersection.subIndex = j;
       }
     }
   }
@@ -71,6 +71,10 @@ bool Cube::Intersects(vec3 x){
 
 Boundaries Cube::getBounds() {
   return bounds;
+}
+
+vec3 Cube::getNormal(int subIndex, vec3 intersectPosition) {
+  return triangles[subIndex].normal;
 }
 
 void Cube::Update_Bounds()

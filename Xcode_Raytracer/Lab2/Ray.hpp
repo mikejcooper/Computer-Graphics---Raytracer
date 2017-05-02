@@ -20,12 +20,13 @@ public:
   vec3 dir;
   vec3 fractionalDir;
   int objectIndex;
+  bool isPrimary;
   
   Ray()
-    : start ( vec3() ), dir( vec3() ), objectIndex( -1 ) {}
+    : start ( vec3() ), dir( vec3() ), objectIndex( -1 ), isPrimary(false) {}
   
-  Ray(vec3 _start, vec3 _dir, int _objectIndex)
-    : start ( _start ), dir( _dir ), objectIndex( _objectIndex )
+  Ray(vec3 _start, vec3 _dir, int _objectIndex, bool _isPrimary)
+    : start ( _start ), dir( _dir ), objectIndex( _objectIndex ), isPrimary(_isPrimary)
   {
     calcFractionalDirection();
   }

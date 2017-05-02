@@ -110,7 +110,7 @@ vec3 traceRayFromCamera(float x , float y) {
   // Get direction of camera
   vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
   direction = direction * camera.rotation;
-  Ray ray = Ray(camera.position, direction, NULLobjectIndex);
+  Ray ray = Ray(camera.position, direction, NULLobjectIndex, true);
   return getColor(ray, 0);
 }
 
@@ -139,37 +139,42 @@ vec3 uniformSampleHemisphere(const float &r1, const float &r2)
   return vec3(x, r1, z);
 }
 
+//vec3 findObjectNormal(int object){
+//  
+//}
+
 vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
-  if(!control.GLOBALILLUMINATION)
+  if(!control.GLOBALILLUMINATION || !ray.isPrimary)
     return indirectLight;
     
   vec3 _indirectLight = vec3(0,0,0);
+  vec3 surfaceNormal = Objects[intersection.objIndex]->getNormal(intersection.subIndex, intersection.position);
   
   //  Create position bias to prevent self reflection
   float bias_tmp = 0.1f;
-  vec3 bias = bias_tmp * intersection.normal;
-  bool outside = dot(ray.dir,intersection.normal) < 0;
+  vec3 bias = bias_tmp * surfaceNormal;
+  bool outside = dot(ray.dir,surfaceNormal) < 0;
   vec3 intersectPosition = outside ? intersection.position - bias : intersection.position + bias;
 
 
-  float N =4;// / (depth + 1);
+  float N = 512;// / (depth + 1);
   vec3 Nt; // Perpendicular to Normal
   vec3 Nb; // Perpendicular to Normal and Nt
   // Compute shaded point coordinate system using normal N. Co-System: N, Nt, Nb.
-  createCoordinateSystem(intersection.normal, Nt, Nb);
+  createCoordinateSystem(surfaceNormal, Nt, Nb);
   float pdf = 1 / (2 * M_PI); // PDF in this case is constant, because all rays or all directions have the same probability of being generated
   for (int n = 0; n < N; ++n) {
     float r1 = ((float) rand() / (RAND_MAX));
     float r2 = ((float) rand() / (RAND_MAX));
     vec3 sample = uniformSampleHemisphere(r1, r2);
     vec3 sampleWorld(
-                      sample.x * Nb.x + sample.y * intersection.normal.x + sample.z * Nt.x,
-                      sample.x * Nb.y + sample.y * intersection.normal.y + sample.z * Nt.y,
-                      sample.x * Nb.z + sample.y * intersection.normal.z + sample.z * Nt.z);
+                      sample.x * Nb.x + sample.y * surfaceNormal.x + sample.z * Nt.x,
+                      sample.x * Nb.y + sample.y * surfaceNormal.y + sample.z * Nt.y,
+                      sample.x * Nb.z + sample.y * surfaceNormal.z + sample.z * Nt.z);
     // don't forget to divide by PDF and multiply by cos(theta)
 //    vec3 randomDirection = getRandomDirectionHemisphere(N);
-    Ray angleRay = Ray(intersectPosition + sampleWorld, sampleWorld, intersection.objIndex);
-    vec3 illumination = getColor(angleRay, depth + 1);
+    Ray angleRay = Ray(intersectPosition + sampleWorld, sampleWorld, intersection.objIndex, false);
+    vec3 illumination = getColor(angleRay, 0);
     _indirectLight += r1 * illumination / pdf; // Mathematically we also need to divide this result by the probability of generating the direction Dr.
   }
   return (_indirectLight / N);
@@ -177,7 +182,7 @@ vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
 
 vec3 getColor(Ray ray, int depth){
   
-  if(depth > MAX_DEPTH) return vec3(0,0,0);
+  if(depth > MAX_DEPTH || (depth == 1 && !ray.isPrimary)) return vec3(0,0,0);
   
 //  float dispersion = 5.0f;
 //  vec3 disturbance((dispersion / RAND_MAX) * (1.0f * rand()), (dispersion / RAND_MAX) * (1.0f * rand()), 0.0f);
@@ -273,7 +278,7 @@ vec3 DirectLight( const Intersection& intersection ){
     // Direct light intensity given distance/radius
     float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
     
-    Ray ray = Ray(positions[k], -surfaceToLight, intersection.objIndex);
+    Ray ray = Ray(positions[k], -surfaceToLight, intersection.objIndex, true);
     Intersection closestIntersection = ClosestIntersection(ray);
     
     if (intersection.objIndex != closestIntersection.objIndex){
@@ -355,7 +360,7 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   {
     vec3 refractionDirection = normalize(refract(ray.dir, intersection.normal, refractiveIndex));
     vec3 refractionRayOrig = outside ? intersection.position - bias : intersection.position + bias;
-    Ray refractRay = Ray(refractionRayOrig, refractionDirection, intersection.objIndex);
+    Ray refractRay = Ray(refractionRayOrig, refractionDirection, intersection.objIndex, ray.isPrimary);
     refractiveColor = getColor(refractRay, depth+1);
   }
   
@@ -363,7 +368,7 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   {
     vec3 reflected = reflectVector(ray.start, intersection.normal);
     vec3 reflectionRayOrig = outside ? intersection.position + bias : intersection.position - bias;
-    Ray reflectedRay(reflectionRayOrig, reflected, intersection.objIndex);
+    Ray reflectedRay(reflectionRayOrig, reflected, intersection.objIndex, ray.isPrimary);
     reflectiveColor = getColor(reflectedRay, depth + 1);
     return reflectiveColor * reflectivity + refractiveColor * (1 - kr);
   }
@@ -492,7 +497,7 @@ void Calculate_DOF() {
       
       vec3 direction(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, FOCAL_LENGTH);
       direction = direction * camera.rotation;
-      Ray ray = Ray(camera.position, direction, NULLobjectIndex);
+      Ray ray = Ray(camera.position, direction, NULLobjectIndex, true);
       
       Intersection closestIntersection_xy = ClosestIntersection(ray);
       
@@ -555,7 +560,7 @@ vec3 traceDofFromCamera1(float x, float y) {
       local_cameraPos = vec3(camera.position.x, camera.position.y - shift, camera.position.z);
     }
     
-    Ray ray = Ray(local_cameraPos, direction, NULLobjectIndex);
+    Ray ray = Ray(local_cameraPos, direction, NULLobjectIndex, true);
     
     Intersection closestIntersection = ClosestIntersection(ray);
     
