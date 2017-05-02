@@ -69,3 +69,29 @@ bool Cube::Intersects(vec3 x){
   return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && 0 <= x.x && (x.y + x.z) <= 1);
 }
 
+Boundaries Cube::getBounds() {
+  return bounds;
+}
+
+void Cube::Update_Bounds()
+{
+  triangles[0].Update_Bounds();
+  bounds = triangles[0].bounds;
+  for (vector<Triangle>::iterator itr = triangles.begin(); itr < triangles.end(); itr++)
+  {
+    (itr)->Update_Bounds();
+    Boundaries b = (itr)->bounds;
+    
+    cout << bounds.max.x <<endl;
+    
+    bounds.min = vec3(std::min(b.min.x, bounds.min.x),
+                      std::min(b.min.y, bounds.min.y),
+                      std::min(b.min.z, bounds.min.z));
+    
+    bounds.max = vec3(std::max(b.max.x, bounds.max.x),
+                      std::max(b.max.y, bounds.max.y),
+                      std::max(b.max.z, bounds.max.z));
+  }
+}
+
+

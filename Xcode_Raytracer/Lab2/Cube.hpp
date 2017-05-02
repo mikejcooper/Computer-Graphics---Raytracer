@@ -17,21 +17,20 @@ class Cube : public Object
 {
 public:
   std::vector<Triangle> triangles;
-  
+  Boundaries bounds;
+
   Cube(std::vector<Triangle> _triangles, Material _material)
-    : triangles(_triangles), Object(_material, 0) {}
+    : triangles(_triangles), Object(_material, 0)
+  {
+    Update_Bounds();
+  }
   
   virtual Intersection intersect(Ray, int);
+  virtual Boundaries getBounds();
   
   vec3 Calculate_Intersection(Triangle, vec3, vec3);
+  void Update_Bounds();
   bool Intersects(vec3);
-
-  void addTriangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
-  {
-    Triangle triangle = Triangle(v0,v1,v2,color);
-    triangles.push_back(triangle);
-  }
-
 };
 
 #endif /* Cube_hpp */

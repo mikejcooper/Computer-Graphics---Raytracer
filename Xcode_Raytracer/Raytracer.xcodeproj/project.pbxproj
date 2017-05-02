@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C69D99A61EB4A71C008B9E62 /* Boundaries.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C69D99A41EB4A71C008B9E62 /* Boundaries.cpp */; };
 		C6A1A33A1E8C68FF003915F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6A1A3391E8C68FF003915F2 /* main.cpp */; };
+		C6CA5D9C1EB627C600B8E384 /* KDTree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CA5D9A1EB627C600B8E384 /* KDTree.cpp */; };
 		C6CD0D261EAA1CC600F6AB1A /* Raytracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */; };
 		C6CD0D291EAA1D5100F6AB1A /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D271EAA1D5100F6AB1A /* Color.cpp */; };
 		C6CD0D2C1EAA201100F6AB1A /* Intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D2A1EAA201100F6AB1A /* Intersection.cpp */; };
@@ -137,6 +138,8 @@
 		C69D99A51EB4A71C008B9E62 /* Boundaries.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Boundaries.hpp; sourceTree = "<group>"; };
 		C6A1A3391E8C68FF003915F2 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C6A1A33B1E8C690A003915F2 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
+		C6CA5D9A1EB627C600B8E384 /* KDTree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KDTree.cpp; sourceTree = "<group>"; };
+		C6CA5D9B1EB627C600B8E384 /* KDTree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = KDTree.hpp; sourceTree = "<group>"; };
 		C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Raytracer.cpp; sourceTree = "<group>"; };
 		C6CD0D251EAA1CC600F6AB1A /* Raytracer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Raytracer.hpp; sourceTree = "<group>"; };
 		C6CD0D271EAA1D5100F6AB1A /* Color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Color.cpp; sourceTree = "<group>"; };
@@ -443,6 +446,8 @@
 				CE34F6121CDA808600D6BBED /* glm */,
 				C6A1A3391E8C68FF003915F2 /* main.cpp */,
 				C6A1A33B1E8C690A003915F2 /* main.h */,
+				C6CA5D9A1EB627C600B8E384 /* KDTree.cpp */,
+				C6CA5D9B1EB627C600B8E384 /* KDTree.hpp */,
 				C6E7F81A1EAA7E910099B632 /* Light.cpp */,
 				C6E7F81B1EAA7E910099B632 /* Light.hpp */,
 				C6E7F8141EAA773F0099B632 /* Control.cpp */,
@@ -932,6 +937,7 @@
 				C6E7F8161EAA773F0099B632 /* Control.cpp in Sources */,
 				C6E7F8221EAA91D70099B632 /* Materials.cpp in Sources */,
 				C6FD91261EAD36EE0083BA6A /* Cube.cpp in Sources */,
+				C6CA5D9C1EB627C600B8E384 /* KDTree.cpp in Sources */,
 				C69D99A61EB4A71C008B9E62 /* Boundaries.cpp in Sources */,
 				C6CD0D2C1EAA201100F6AB1A /* Intersection.cpp in Sources */,
 				C6E7F8191EAA78200099B632 /* Triangle.cpp in Sources */,

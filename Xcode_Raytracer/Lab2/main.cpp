@@ -26,8 +26,10 @@ int Update(int t)
 
 int main( int argc, char* argv[] )
 {
-//    LoadGenericmodel(Objects);
+//    LoadGenericmodel(&Objects);
   LoadTestModel( &Objects );
+  kdtree = new KDTree(0, 'z', Objects);
+  
   
 
   
@@ -115,9 +117,67 @@ vec3 traceRayFromCamera(float x , float y) {
 
 vec3  indirectLight = 0.2f * vec3( 1, 1, 1 );
 
+
+
+void createCoordinateSystem(const vec3 &N, vec3 &Nt, vec3 &Nb)
+{
+  if (std::fabs(N.x) > std::fabs(N.y))
+    Nt = vec3(N.z, 0, -N.x) / sqrtf(N.x * N.x + N.z * N.z);
+  else
+    Nt = vec3(0, -N.z, N.y) / sqrtf(N.y * N.y + N.z * N.z);
+  Nb = cross(N,Nt);
+}
+
+vec3 uniformSampleHemisphere(const float &r1, const float &r2)
+{
+  // cos(theta) = u1 = y
+  // cos^2(theta) + sin^2(theta) = 1 -> sin(theta) = srtf(1 - cos^2(theta))
+  float sinTheta = sqrtf(1 - r1 * r1);
+  float phi = 2 * M_PI * r2;
+  float x = sinTheta * cosf(phi);
+  float z = sinTheta * sinf(phi);
+  return vec3(x, r1, z);
+}
+
+vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
+  if(!control.GLOBALILLUMINATION)
+    return indirectLight;
+    
+  vec3 _indirectLight = vec3(0,0,0);
+  
+  //  Create position bias to prevent self reflection
+  float bias_tmp = 0.1f;
+  vec3 bias = bias_tmp * intersection.normal;
+  bool outside = dot(ray.dir,intersection.normal) < 0;
+  vec3 intersectPosition = outside ? intersection.position - bias : intersection.position + bias;
+
+
+  float N =4;// / (depth + 1);
+  vec3 Nt; // Perpendicular to Normal
+  vec3 Nb; // Perpendicular to Normal and Nt
+  // Compute shaded point coordinate system using normal N. Co-System: N, Nt, Nb.
+  createCoordinateSystem(intersection.normal, Nt, Nb);
+  float pdf = 1 / (2 * M_PI); // PDF in this case is constant, because all rays or all directions have the same probability of being generated
+  for (int n = 0; n < N; ++n) {
+    float r1 = ((float) rand() / (RAND_MAX));
+    float r2 = ((float) rand() / (RAND_MAX));
+    vec3 sample = uniformSampleHemisphere(r1, r2);
+    vec3 sampleWorld(
+                      sample.x * Nb.x + sample.y * intersection.normal.x + sample.z * Nt.x,
+                      sample.x * Nb.y + sample.y * intersection.normal.y + sample.z * Nt.y,
+                      sample.x * Nb.z + sample.y * intersection.normal.z + sample.z * Nt.z);
+    // don't forget to divide by PDF and multiply by cos(theta)
+//    vec3 randomDirection = getRandomDirectionHemisphere(N);
+    Ray angleRay = Ray(intersectPosition + sampleWorld, sampleWorld, intersection.objIndex);
+    vec3 illumination = getColor(angleRay, depth + 1);
+    _indirectLight += r1 * illumination / pdf; // Mathematically we also need to divide this result by the probability of generating the direction Dr.
+  }
+  return (_indirectLight / N);
+}
+
 vec3 getColor(Ray ray, int depth){
   
-  if(depth > MAX_DEPTH) return vec3(5,5,0);
+  if(depth > MAX_DEPTH) return vec3(0,0,0);
   
 //  float dispersion = 5.0f;
 //  vec3 disturbance((dispersion / RAND_MAX) * (1.0f * rand()), (dispersion / RAND_MAX) * (1.0f * rand()), 0.0f);
@@ -127,13 +187,14 @@ vec3 getColor(Ray ray, int depth){
   //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
   if(closestIntersection.didIntersect) {
     vec3 color = Objects[closestIntersection.objIndex]->material.getColor();
-    vec3 directLight = DirectLight(closestIntersection);
+    vec3 _indirectLight = IndirectLight(closestIntersection, ray, depth);
+    vec3 _directLight = DirectLight(closestIntersection);
     vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
 //    if(Objects[closestIntersection.objIndex]->material.getId() == 3){
 //      
 //      return directLight*0.4f + reflectedColor;
 //    }
-    return color * directLight + reflectedColor;
+    return color * (_directLight + _indirectLight) + reflectedColor;
   }
   // No Intersection
   else {
@@ -149,10 +210,13 @@ vec3 getColor(Ray ray, int depth){
  it should also return some information about the closest intersection.
  */
 Intersection ClosestIntersection(Ray ray){
+  if(control.KDTREE)
+    return kdtree->getClosestIntersection(ray);
+  
   Intersection closestIntersection = Intersection();
   
   for (vector<Object*>::iterator itr = Objects.begin(); itr < Objects.end(); itr++) {
-    
+      
     Intersection intersection = (*itr)->intersect(ray, int (itr - Objects.begin()));
     
     if(intersection.didIntersect && intersection.distance < closestIntersection.distance)  {
@@ -227,8 +291,9 @@ vec3 DirectLight( const Intersection& intersection ){
     
 //    light += ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
-  return specularColor + diffuseColor + indirectLight;
+  return specularColor + diffuseColor;
 }
+
 
 
 
@@ -300,15 +365,10 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
     vec3 reflectionRayOrig = outside ? intersection.position + bias : intersection.position - bias;
     Ray reflectedRay(reflectionRayOrig, reflected, intersection.objIndex);
     reflectiveColor = getColor(reflectedRay, depth + 1);
-    
-    if(refractiveIndex <= 1)
-    {
-      return reflectiveColor * reflectivity;
-    }
-    
+    return reflectiveColor * reflectivity + refractiveColor * (1 - kr);
   }
   // mix the two
-  return  reflectiveColor * kr + refractiveColor * (1 - kr);
+  return  refractiveColor * (1 - kr);
   
   
 //  if (reflectivity > 0) {

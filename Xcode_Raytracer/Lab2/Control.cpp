@@ -110,6 +110,16 @@ void Control::Features(uint8_t* keystate){
       cout << "Take Picture " << TAKEPICTURE << endl;
       while (keystate[SDLK_p]) SDL_PumpEvents();
     }
+    if(keystate[SDLK_k]){
+      KDTREE = (KDTREE) ? false : true;
+      cout << "KDTree " << KDTREE << endl;
+      while (keystate[SDLK_k]) SDL_PumpEvents();
+    }
+    if(keystate[SDLK_g]){
+      GLOBALILLUMINATION = (GLOBALILLUMINATION) ? false : true;
+      cout << "Global Illumination " << GLOBALILLUMINATION << endl;
+      while (keystate[SDLK_g]) SDL_PumpEvents();
+    }
     //    if(keystate[SDLK_d]){
     //      DOF = (DOF) ? false : true;
     //      cout << "Show Depth of Field " << DOF << endl;

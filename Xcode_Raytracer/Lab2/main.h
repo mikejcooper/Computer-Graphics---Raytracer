@@ -13,6 +13,7 @@
 #include "Control.hpp"
 #include "Light.hpp"
 #include "Object.hpp"
+#include "KDTree.hpp"
 
 
 
@@ -56,9 +57,9 @@ float GLASS_REFRACTIVE_INDEX = 1.52;
 float DIFFUSE_SPECULAR_REFLECTION = 0.18;
 
 SDL_Surface* screen;
-const int   SCREEN_WIDTH = 500;
-const int   SCREEN_HEIGHT = 500;
-const float FOCAL_LENGTH = 500;
+const int   SCREEN_WIDTH = 200;
+const int   SCREEN_HEIGHT = 200;
+const float FOCAL_LENGTH = 200;
 const float TURN_ANGLE = (M_PI / 180) * 6;
 
 const mat3  rotationUp(1,0,0,0,cos(TURN_ANGLE),-sin(TURN_ANGLE),0,sin(TURN_ANGLE),cos(TURN_ANGLE));
@@ -70,6 +71,7 @@ vector<Object*> Objects;
 vector<Triangle> Triangles;
 vector<Light> Lights;
 vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
+KDTree* kdtree;
 
 
 /* ----------------------------------------------------------------------------*/

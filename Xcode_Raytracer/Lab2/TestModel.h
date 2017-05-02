@@ -108,7 +108,7 @@ void LoadGenericmodel(std::vector<Object*> *Objects){
             cout << "Cube Objected Added\n";
           }
           else if(objectNameCurrent[1] == 'S'){
-//            Objects->push_back( new Sphere(triangles, Diffuse(yellow)) );
+            Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
             cout << "Sphere Objected Added\n";
           }
 
@@ -126,7 +126,7 @@ void LoadGenericmodel(std::vector<Object*> *Objects){
     cout << "Cube Objected Added\n";
   }
   else if(objectNameCurrent[1] == 'S'){
-//    Objects->push_back( new Sphere(triangles, Diffuse(yellow)) );
+    Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
     cout << "Sphere Objected Added\n";
   }
   // tempObject.vertices.clear();
@@ -204,7 +204,7 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle( G, D, C, white ) );
   triangles.push_back( Triangle( G, H, D, white ) );
   
-  Objects->push_back(new Cube(triangles, Diffuse(purple)));
+  Objects->push_back(new Cube(triangles, Diffuse(white)));
   triangles.clear();
   
   // ---------------------------------------------------------------------------
@@ -278,22 +278,104 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.push_back( Triangle(G,F,E,blue) );
   triangles.push_back( Triangle(G,H,F,blue) );
   
-  Objects->push_back(new Cube(triangles, Diffuse(blue)));
+  Objects->push_back(new Cube(triangles, Phong(blue)));
   triangles.clear();
   
-  vec3 center = vec3(-0.5,0.4,-0.5);
+  vec3 center = vec3(-0.5,0.7,-0.5);
   float radius = 0.2f;
-  Material material = Mirror(red);
+  Material material = Glass(blue);
   
   Objects->push_back(new Sphere(center, radius, material));
-
+  
   center = vec3(-0.0,0.1,-0.5);
   radius = 0.2f;
   material = Mirror(red);
   
   Objects->push_back(new Sphere(center, radius, material));
-
   
+  
+  
+//  
+//  vec3 center = vec3(-0.7,0.8,-0.9);
+//  float radius = 0.05f;
+//  Material material = Glass(blue);
+//  
+//  Objects->push_back(new Sphere(center, radius, material));
+//
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.8,-0.9);
+//    float radius = 0.05f;
+//    Material material = Glass(blue);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.6,-0.9);
+//    float radius = 0.05f;
+//    Material material = Glass(purple);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.4,-0.9);
+//    float radius = 0.05f;
+//    Material material = Glass(green);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.2,-0.9);
+//    float radius = 0.05f;
+//    Material material = Glass(red);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.0,-0.9);
+//    float radius = 0.05f;
+//    Material material = Glass(cyan);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  
+////  -------
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.8,-0.7);
+//    float radius = 0.05f;
+//    Material material = Glass(blue);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.6,-0.7);
+//    float radius = 0.05f;
+//    Material material = Glass(purple);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.4,-0.7);
+//    float radius = 0.05f;
+//    Material material = Glass(green);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.2,-0.7);
+//    float radius = 0.05f;
+//    Material material = Glass(red);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+//  
+//  for(int i = 0; i < 8; i++){
+//    vec3 center = vec3(-0.7 + 0.2*i,0.0,-0.7);
+//    float radius = 0.05f;
+//    Material material = Glass(cyan);
+//    Objects->push_back(new Sphere(center, radius, material));
+//  }
+
   
   
   
@@ -326,43 +408,10 @@ void LoadTestModel( std::vector<Object*> *Objects )
         
         obj->triangles[j].ComputeNormal();
       }
+      obj->Update_Bounds();
     }
   }
-  
-  
-  
-//  {
-//    triangles[i].v0 *= 2/L;
-//    triangles[i].v1 *= 2/L;
-//    triangles[i].v2 *= 2/L;
-//    
-//    triangles[i].v0 -= vec3(1,1,1);
-//    triangles[i].v1 -= vec3(1,1,1);
-//    triangles[i].v2 -= vec3(1,1,1);
-//    
-//    triangles[i].v0.x *= -1;
-//    triangles[i].v1.x *= -1;
-//    triangles[i].v2.x *= -1;
-//    
-//    triangles[i].v0.y *= -1;
-//    triangles[i].v1.y *= -1;
-//    triangles[i].v2.y *= -1;
-//    
-//    triangles[i].ComputeNormal();
-//  }
-//  
-  
-
 }
-
-//void StoreAsObject(std::vector<Triangle>& triangles, std::vector<Object>& Objects, Material material){
-//  Object tmp_obj;
-//  for(int i = 0; i < triangles.size(); i++){
-//    tmp_obj.triangles.push_back(triangles[i]);
-//  }
-//  tmp_obj.material = material;
-//  Objects.push_back(tmp_obj);
-//}
 
 
 

@@ -12,11 +12,10 @@
 #include <stdio.h>
 #include "glm/glm.hpp"
 #include <vector>
-#include "Triangle.hpp"
 #include "Material.hpp"
-#include "Materials.hpp"
 #include "Ray.hpp"
 #include "Intersection.hpp"
+#include "Boundaries.hpp"
 
 
 using namespace std;
@@ -36,6 +35,8 @@ public:
 //  Object() {};
   
   virtual Intersection intersect(Ray, int) = 0;
+  virtual Boundaries getBounds() = 0;
+
   
   int getId();
 

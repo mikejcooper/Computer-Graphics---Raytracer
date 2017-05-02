@@ -44,6 +44,8 @@ public:
   bool  SHOW_EDGES;
   bool  DOF;
   bool  TAKEPICTURE;
+  bool  KDTREE;
+  bool  GLOBALILLUMINATION;
   
   Control(){};
   
@@ -64,6 +66,8 @@ public:
     SHOW_EDGES = false;
     DOF = false;
     TAKEPICTURE = false;
+    KDTREE = false;
+    GLOBALILLUMINATION = false;
   
   }
   
