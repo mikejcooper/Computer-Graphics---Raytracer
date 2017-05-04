@@ -13,7 +13,7 @@ using namespace std;
 
 void KDTree::build() {
   // Make sure all objects are properly wrapped
-  for (vector<Object*>::iterator itr = objects.begin(); itr < objects.end(); itr++) {
+  for (vector<Cube*>::iterator itr = objects.begin(); itr < objects.end(); itr++) {
     Boundaries curr = (*itr)->getBounds();
     bounds.min = vec3(fmin(bounds.min.x, curr.min.x),
                         fmin(bounds.min.y, curr.min.y),
@@ -43,11 +43,11 @@ void KDTree::build() {
   // Where to split the bounds
   double splitValue = bounds.splitValue(axis);
   
-  vector<Object*> leftObjects;
-  vector<Object*> rightObjects;
+  vector<Cube*> leftObjects;
+  vector<Cube*> rightObjects;
   
-  for (vector<Object*>::iterator itr = objects.begin(); itr < objects.end(); itr++) {
-    Object* obj = *itr;
+  for (vector<Cube*>::iterator itr = objects.begin(); itr < objects.end(); itr++) {
+    Cube* obj = *itr;
     Boundaries curr = obj->getBounds();
     double min = 0.0, max = 0.0;
     
@@ -116,7 +116,7 @@ Intersection KDTree::getClosestObjectIntersection(const Ray ray) {
   // No children so just go through current objects like normal.
   Intersection closestIntersection = Intersection();
   
-  for (vector<Object*>::iterator itr = objects.begin(); itr < objects.end(); itr++) {
+  for (vector<Cube*>::iterator itr = objects.begin(); itr < objects.end(); itr++) {
     
     Intersection intersection = (*itr)->intersect(ray, int (itr - objects.begin()));
     

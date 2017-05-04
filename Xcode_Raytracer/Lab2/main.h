@@ -67,7 +67,7 @@ const mat3  rotationDown(1,0,0,0,cos(-TURN_ANGLE),-sin(-TURN_ANGLE),0,sin(-TURN_
 const mat3  rotationLeft(cos(TURN_ANGLE),0,-sin(TURN_ANGLE),0,1,0,sin(TURN_ANGLE),0,cos(TURN_ANGLE));
 const mat3  rotationRight(cos(-TURN_ANGLE),0,-sin(-TURN_ANGLE),0,1,0,sin(-TURN_ANGLE),0,cos(-TURN_ANGLE));
 
-vector<Object*> Objects;
+vector<Cube*> Objects;
 vector<Triangle> Triangles;
 vector<Light> Lights;
 vec3 screenPixels[SCREEN_HEIGHT][SCREEN_WIDTH];

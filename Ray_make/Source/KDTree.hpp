@@ -16,6 +16,7 @@
 #include "Ray.hpp"
 #include "Intersection.hpp"
 #include "Object.hpp"
+#include "Cube.hpp"
 
 //class Object;
 //class Intersection;
@@ -28,7 +29,7 @@ private:
   int axisRetries;
   char axis;
   Boundaries bounds;
-  std::vector<Object*> objects;
+  std::vector<Cube*> objects;
   KDTree* left;
   KDTree* right;
   
@@ -37,7 +38,7 @@ private:
   
 public:
   
-  KDTree(int depth_, char axis_, std::vector<Object*> objects_) :
+  KDTree(int depth_, char axis_, std::vector<Cube*> objects_) :
   depth(depth_), axis(axis_), objects(objects_)
   {
     axisRetries = 0;

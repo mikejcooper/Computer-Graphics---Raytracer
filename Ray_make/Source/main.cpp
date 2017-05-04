@@ -233,7 +233,7 @@ Intersection ClosestIntersection(Ray ray){
   
   Intersection closestIntersection = Intersection();
   
-  for (vector<Object*>::iterator itr = Objects.begin(); itr < Objects.end(); itr++) {
+  for (vector<Cube*>::iterator itr = Objects.begin(); itr < Objects.end(); itr++) {
       
     Intersection intersection = (*itr)->intersect(ray, int (itr - Objects.begin()));
     

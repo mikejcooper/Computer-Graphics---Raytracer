@@ -95,44 +95,12 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Lab2/TestModel.h"
-            timestampString = "515163890.830594"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "67"
-            endingLineNumber = "67"
-            landmarkName = "LoadGenericmodel(std::vector&lt;Object*&gt; *Objects)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Lab2/TestModel.h"
-            timestampString = "515267259.458235"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "103"
-            endingLineNumber = "103"
-            landmarkName = "LoadGenericmodel(std::vector&lt;Object*&gt; *Objects)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515258702.226665"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "36"
-            endingLineNumber = "36"
+            startingLineNumber = "35"
+            endingLineNumber = "35"
             landmarkName = "main( int argc, char* argv[] )"
             landmarkType = "9">
          </BreakpointContent>
@@ -144,11 +112,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515258702.226665"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "33"
-            endingLineNumber = "33"
+            startingLineNumber = "32"
+            endingLineNumber = "32"
             landmarkName = "main( int argc, char* argv[] )"
             landmarkType = "9">
          </BreakpointContent>
@@ -160,11 +128,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515588576.044003"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "238"
-            endingLineNumber = "238"
+            startingLineNumber = "237"
+            endingLineNumber = "237"
             landmarkName = "ClosestIntersection(Ray ray)"
             landmarkType = "9">
             <Locations>
@@ -253,12 +221,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/TestModel.h"
-            timestampString = "515519645.812947"
+            timestampString = "515594940.156119"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "392"
-            endingLineNumber = "392"
-            landmarkName = "LoadTestModel( std::vector&lt;Object*&gt; *Objects )"
+            startingLineNumber = "184"
+            endingLineNumber = "184"
+            landmarkName = "LoadTestModel( std::vector&lt;Cube*&gt; *Objects )"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -285,11 +253,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515588576.044003"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "333"
-            endingLineNumber = "333"
+            startingLineNumber = "332"
+            endingLineNumber = "332"
             landmarkName = "fresnel(const vec3 I, const vec3 N, const float ior)"
             landmarkType = "9">
          </BreakpointContent>
@@ -301,11 +269,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515588576.044003"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "354"
-            endingLineNumber = "354"
+            startingLineNumber = "353"
+            endingLineNumber = "353"
             landmarkName = "refract(const vec3 I, const vec3 N, const float ior)"
             landmarkType = "9">
          </BreakpointContent>
@@ -349,12 +317,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/TestModel.h"
-            timestampString = "515519645.812947"
+            timestampString = "515594940.156119"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "389"
-            endingLineNumber = "389"
-            landmarkName = "LoadTestModel( std::vector&lt;Object*&gt; *Objects )"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
+            landmarkName = "LoadTestModel( std::vector&lt;Cube*&gt; *Objects )"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -381,11 +349,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515588576.044003"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "270"
-            endingLineNumber = "270"
+            startingLineNumber = "269"
+            endingLineNumber = "269"
             landmarkName = "getSpecularLighting(const Intersection&amp; intersection, Light* light, const Ray&amp; ray)"
             landmarkType = "9">
          </BreakpointContent>
@@ -397,11 +365,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Lab2/main.cpp"
-            timestampString = "515444711.263262"
+            timestampString = "515595291.934565"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "46"
-            endingLineNumber = "46"
+            startingLineNumber = "45"
+            endingLineNumber = "45"
             landmarkName = "main( int argc, char* argv[] )"
             landmarkType = "9">
          </BreakpointContent>
@@ -409,15 +377,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Lab2/TestModel.h"
-            timestampString = "515518633.118753"
+            filePath = "Lab2/Cube.cpp"
+            timestampString = "515594668.279256"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "28"
-            endingLineNumber = "28">
+            startingLineNumber = "171"
+            endingLineNumber = "171">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

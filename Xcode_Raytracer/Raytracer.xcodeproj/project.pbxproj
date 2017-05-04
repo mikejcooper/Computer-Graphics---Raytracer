@@ -10,7 +10,6 @@
 		C69D99A61EB4A71C008B9E62 /* Boundaries.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C69D99A41EB4A71C008B9E62 /* Boundaries.cpp */; };
 		C6A1A33A1E8C68FF003915F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6A1A3391E8C68FF003915F2 /* main.cpp */; };
 		C6CA5D9C1EB627C600B8E384 /* KDTree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CA5D9A1EB627C600B8E384 /* KDTree.cpp */; };
-		C6CD0D261EAA1CC600F6AB1A /* Raytracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */; };
 		C6CD0D291EAA1D5100F6AB1A /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D271EAA1D5100F6AB1A /* Color.cpp */; };
 		C6CD0D2C1EAA201100F6AB1A /* Intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D2A1EAA201100F6AB1A /* Intersection.cpp */; };
 		C6CD0D2F1EAA262100F6AB1A /* Ray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6CD0D2D1EAA262100F6AB1A /* Ray.cpp */; };
@@ -140,8 +139,6 @@
 		C6A1A33B1E8C690A003915F2 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		C6CA5D9A1EB627C600B8E384 /* KDTree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KDTree.cpp; sourceTree = "<group>"; };
 		C6CA5D9B1EB627C600B8E384 /* KDTree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = KDTree.hpp; sourceTree = "<group>"; };
-		C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Raytracer.cpp; sourceTree = "<group>"; };
-		C6CD0D251EAA1CC600F6AB1A /* Raytracer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Raytracer.hpp; sourceTree = "<group>"; };
 		C6CD0D271EAA1D5100F6AB1A /* Color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Color.cpp; sourceTree = "<group>"; };
 		C6CD0D281EAA1D5100F6AB1A /* Color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Color.hpp; sourceTree = "<group>"; };
 		C6CD0D2A1EAA201100F6AB1A /* Intersection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Intersection.cpp; sourceTree = "<group>"; };
@@ -454,8 +451,6 @@
 				C6E7F8151EAA773F0099B632 /* Control.hpp */,
 				C6CD0D2A1EAA201100F6AB1A /* Intersection.cpp */,
 				C6CD0D2B1EAA201100F6AB1A /* Intersection.hpp */,
-				C6CD0D241EAA1CC600F6AB1A /* Raytracer.cpp */,
-				C6CD0D251EAA1CC600F6AB1A /* Raytracer.hpp */,
 				C6CD0D331EAA59A300F6AB1A /* Camera.cpp */,
 				C6CD0D341EAA59A300F6AB1A /* Camera.hpp */,
 				C6CD0D2D1EAA262100F6AB1A /* Ray.cpp */,
@@ -928,7 +923,6 @@
 			files = (
 				C6E7F81C1EAA7E910099B632 /* Light.cpp in Sources */,
 				C6CD0D2F1EAA262100F6AB1A /* Ray.cpp in Sources */,
-				C6CD0D261EAA1CC600F6AB1A /* Raytracer.cpp in Sources */,
 				C6CD0D351EAA59A300F6AB1A /* Camera.cpp in Sources */,
 				C6FD91231EAD2D3E0083BA6A /* Object.cpp in Sources */,
 				C6E7F81F1EAA90A10099B632 /* Material.cpp in Sources */,

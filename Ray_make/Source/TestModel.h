@@ -17,128 +17,7 @@ using namespace glm;
 
 
 
-struct Vertex
-{
-  glm::vec3 position;
-};
-
-glm::vec3 findMaxCoordinates(vector<Vertex> vertices);
-glm::vec3 findMinCoordinates(vector<Vertex> vertices);
-
-
-int getVertexIndex(std::string vertex){
-  std::stringstream vert(vertex);
-  std::string segment;
-  std::vector<std::string> seglist;
-  while(std::getline(vert, segment, '/'))
-  {
-	   seglist.push_back(segment);
-  }
-  return atoi(seglist[0].c_str());
-}
-
-void LoadGenericmodel(std::vector<Object*> *Objects){
-  vec3 yellow( 0.75f, 0.75f, 0.15f );
-
-  using glm::vec3;
-  vector<Vertex> vertices;
-  std::vector<Triangle> triangles;
-  int vertexCount = 0;
-  int minId = 0;
-  
-  int objectCounter = 0;
-  
-  vec3 green(  0.15f, 0.75f, 0.15f );
-  vec3 red(    0.75f, 0.15f, 0.15f );
-  
-  std::ifstream myfile;
-  myfile.open ("/Users/mikecooper/Desktop/tmp.obj");
-  std::string line;
-  std::string objectNameCurrent;
-  std::string objectNameNext;
-  
-  while (std::getline(myfile, line))
-  {
-    std::string a;
-    std::istringstream iss(line);
-    
-    (iss >> a);
-    
-    if(!a.compare("v")){
-	    	float x,y,z;
-	    	iss >> x >> y >> z;
-	    	Vertex vertex;
-	    	vertex.position = vec3(x,y,z);
-	    	vertices.push_back(vertex);
-	    	vertexCount++;
-    }
-    if(!a.compare("f")){
-	    	cout << "triangle made\n";
-	    	std::string v0,v1,v2;
-	    	int vertexV0 = 0,vertexV1 = 0,vertexV2 = 0;
-	    	iss >> v0 >> v1 >> v2;
-	    	vertexV0 = getVertexIndex(v0) - 1;
-	    	vertexV1 = getVertexIndex(v1) - 1;
-	    	vertexV2 = getVertexIndex(v2) - 1;
-      if(objectCounter == 1){
-        Triangle triangle = Triangle(vertices[vertexV0].position,vertices[vertexV1].position,vertices[vertexV2].position,green);
-        triangles.push_back(triangle);
-
-      }
-      if(objectCounter == 2){
-        Triangle triangle = Triangle(vertices[vertexV0].position,vertices[vertexV1].position,vertices[vertexV2].position,red);
-        triangles.push_back(triangle);
-
-      }
-      else {
-        Triangle triangle = Triangle(vertices[vertexV0].position,vertices[vertexV1].position,vertices[vertexV2].position,red);
-        triangles.push_back(triangle);
-      }
-      
-    }
-    if(!a.compare("g")){
-        // Assign current to last round
-        objectNameCurrent = objectNameNext;
-        iss >> objectNameNext;
-            
-    		// vertexCount = 0;
-	    	if(objectCounter > 0){
-          if(objectNameCurrent[1] == 'C'){
-            Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
-            cout << "Cube Objected Added\n";
-          }
-          else if(objectNameCurrent[1] == 'S'){
-            Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
-            cout << "Sphere Objected Added\n";
-          }
-
-          triangles.clear();
-        }
-	    	// tempObject.vertices = vertices;
-    		// tempObject.vIdMax = vertices.size();
-	    	objectCounter++;
-    }
-  }
-  
-  //collect last object;
-  if(objectNameCurrent[1] == 'C'){
-    Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
-    cout << "Cube Objected Added\n";
-  }
-  else if(objectNameCurrent[1] == 'S'){
-    Objects->push_back( new Cube(triangles, Diffuse(yellow)) );
-    cout << "Sphere Objected Added\n";
-  }
-  // tempObject.vertices.clear();
-  triangles.clear();
-  minId = vertexCount-1;
-  
-  
-}
-
-void StoreAsObject(std::vector<Triangle>& triangles, std::vector<Object>& Objects, Material material);
-
-void LoadTestModel( std::vector<Object*> *Objects )
+void LoadTestModel( std::vector<Cube*> *Objects )
 {
   std::vector<Triangle> triangles;
   
@@ -287,106 +166,19 @@ void LoadTestModel( std::vector<Object*> *Objects )
   float radius = 0.15f;
   Material material = Mirror(red);
   
-  // Objects->push_back(new Sphere(center, radius, material));
+  Objects->push_back(new Cube(center, radius, material));
   
   center = vec3(-0.0,0.1,-0.5);
   radius = 0.2f;
   material = Glass(trans);
   
-//  Objects->push_back(new Sphere(center, radius, material));
+//  Objects->push_back(new Cube(center, radius, material));
   
-  
-  
-//  
-//  vec3 center = vec3(-0.7,0.8,-0.9);
-//  float radius = 0.05f;
-//  Material material = Glass(blue);
-//  
-//  Objects->push_back(new Sphere(center, radius, material));
-//
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.8,-0.9);
-//    float radius = 0.05f;
-//    Material material = Glass(blue);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.6,-0.9);
-//    float radius = 0.05f;
-//    Material material = Glass(purple);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.4,-0.9);
-//    float radius = 0.05f;
-//    Material material = Glass(green);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.2,-0.9);
-//    float radius = 0.05f;
-//    Material material = Glass(red);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.0,-0.9);
-//    float radius = 0.05f;
-//    Material material = Glass(cyan);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  
-////  -------
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.8,-0.7);
-//    float radius = 0.05f;
-//    Material material = Glass(blue);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.6,-0.7);
-//    float radius = 0.05f;
-//    Material material = Glass(purple);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.4,-0.7);
-//    float radius = 0.05f;
-//    Material material = Glass(green);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.2,-0.7);
-//    float radius = 0.05f;
-//    Material material = Glass(red);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
-//  
-//  for(int i = 0; i < 8; i++){
-//    vec3 center = vec3(-0.7 + 0.2*i,0.0,-0.7);
-//    float radius = 0.05f;
-//    Material material = Glass(cyan);
-//    Objects->push_back(new Sphere(center, radius, material));
-//  }
 
-  
-  
-  
-  
-  
   // ----------------------------------------------
   // Scale to the volume [-1,1]^3
   
-  for (vector<Object*>::iterator itr = Objects->begin(); itr < Objects->end(); itr++) {
+  for (vector<Cube*>::iterator itr = Objects->begin(); itr < Objects->end(); itr++) {
     if ((*itr)->getId() == 0){
       //Is cube
       Cube* obj = static_cast<Cube*>(*itr);
