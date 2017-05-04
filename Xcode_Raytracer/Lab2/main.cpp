@@ -51,12 +51,13 @@ int main( int argc, char* argv[] )
   {
     t = Update(t);
     Draw();
-    if(control.TAKEPICTURE){
-      SDL_SaveBMP( screen, "screenshot.bmp" );
-      return 0;
-    }
+//    if(control.TAKEPICTURE){
+//      SDL_SaveBMP( screen, "screenshot.bmp" );
+//      return 0;
+//    }
   }
   
+
   return 0;
 }
 
@@ -176,7 +177,7 @@ vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
   vec3 intersectPosition = outside ? intersection.position - bias : intersection.position + bias;
 
 
-  float N = 32;// / (depth + 1);
+  float N = 10000;// / (depth + 1);
   vec3 Nt; // Perpendicular to Normal
   vec3 Nb; // Perpendicular to Normal and Nt
   // Compute shaded point coordinate system using normal N. Co-System: N, Nt, Nb.
@@ -201,13 +202,13 @@ vec3 IndirectLight(Intersection intersection, Ray ray, int depth){
 
 vec3 getColor(Ray ray, int depth){
   
-  if(depth > MAX_DEPTH || (depth == 1 && !ray.isPrimary)) return vec3(0,0,0);
+  if(depth > MAX_DEPTH || (depth == 2 && !ray.isPrimary)) return vec3(0,0,0);
     
   Intersection closestIntersection = ClosestIntersection(ray);
   
   //Fill a pixel with the color of the closest triangle intersecting the ray, black otherwise
   if(closestIntersection.didIntersect) {
-    vec3 color = Objects[closestIntersection.objIndex]->material.getColor();
+    vec3 color = Objects[closestIntersection.objIndex]->getMaterial().getColor();
     vec3 _indirectLight = IndirectLight(closestIntersection, ray, depth);
     vec3 _directLight = DirectLight(closestIntersection);
     vec3 reflectedColor = getReflectiveRefractiveLighting(closestIntersection, ray, depth);
@@ -247,7 +248,7 @@ Intersection ClosestIntersection(Ray ray){
 vec3 getSpecularLighting(const Intersection& intersection, Light* light, const Ray& ray) {
   
   vec3 specularColor(0.0, 0.0, 0.0);
-  float shininess = Objects[intersection.objIndex]->material.getShininess();
+  float shininess = Objects[intersection.objIndex]->getMaterial().getShininess();
   
   if (shininess == 0.0f) {
     /* Don't perform specular lighting on non shiny objects. */
@@ -276,41 +277,50 @@ vec3 DirectLight( const Intersection& intersection ){
   vec3 diffuseColor(0.0f,0.0f,0.0f);
   vec3 specularColor(0.0f,0.0f,0.0f);
   vec3 light(0.0f,0.0f,0.0f);
-  vec3 positions[100];
-  SoftShadowPositions(positions);
-  
-  for (int k = 0; k < control.SOFT_SHADOWS_SAMPLES; k++) {
-    // Unit vector from point of intersection to light
-    vec3 surfaceToLight = glm::normalize(positions[k] - intersection.position);
-    // Distance from point of intersection to light
-    float radius = glm::length(positions[k] - intersection.position);
-    
-    // Unit vector perpendicular to plane.
-    vec3 normal = glm::normalize(intersection.normal);
-    // Direct light intensity given distance/radius
-    float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
-    
-    Ray ray = Ray(positions[k], -surfaceToLight, intersection.objIndex, true);
-    Intersection closestIntersection = ClosestIntersection(ray);
-    
-    if (intersection.objIndex != closestIntersection.objIndex){
-      // If intersection is closer to light source than self
-      if (closestIntersection.distance < radius * 0.99f){
-        float refractiveIndex = Objects[closestIntersection.objIndex]->material.getRefractiveIndex();
-        float shadowAlpha = (refractiveIndex == 1) ? 0.0f : 1.0f / 90.0f * refractiveIndex;
-        lightIntensity = shadowAlpha; // Zero light intensity
-//        lightIntensity = 0.0f;
+  for (vector<Light>::iterator itr = Lights.begin(); itr < Lights.end(); itr++) {
+    vec3 positions[100];
+    SoftShadowPositions(positions, itr->position);
+
+    for (int k = 0; k < control.SOFT_SHADOWS_SAMPLES; k++) {
+      // Unit vector from point of intersection to light
+      vec3 surfaceToLight = glm::normalize(positions[k] - intersection.position);
+      // Distance from point of intersection to light
+      float radius = glm::length(positions[k] - intersection.position);
+      
+      // Unit vector perpendicular to plane.
+      vec3 normal = glm::normalize(intersection.normal);
+      // Direct light intensity given distance/radius
+      float lightIntensity = max( glm::dot(normal, surfaceToLight) , 0 ) / (4 * M_PI * radius * radius);
+      
+      Ray ray = Ray(positions[k], -surfaceToLight, intersection.objIndex, true);
+      Intersection closestIntersection = ClosestIntersection(ray);
+      
+      if (intersection.objIndex != closestIntersection.objIndex){
+        // If intersection is closer to light source than self
+        if (closestIntersection.distance < radius * 0.99f){
+          float refractiveIndex = Objects[closestIntersection.objIndex]->getMaterial().getRefractiveIndex();
+          float shadowAlpha = (refractiveIndex == 1) ? 0.0f : 1.0f / 90.0f * refractiveIndex;
+          lightIntensity = shadowAlpha; // Zero light intensity
+          //        lightIntensity = 0.0f;
+        }
+      }
+      
+      if( control.SOFT_SHADOWS_SAMPLES < 2){
+        diffuseColor = (diffuseColor + lightIntensity) * ( itr->color );
+        specularColor = specularColor + getSpecularLighting(intersection, &*itr, ray);
+      } else {
+        light += ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES ) * lightIntensity;
       }
     }
     
-    diffuseColor = (diffuseColor + lightIntensity) * ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES );
-    specularColor = specularColor + getSpecularLighting(intersection, &Lights[0], ray);
-    
-//    light += ( Lights[0].color / (float) control.SOFT_SHADOWS_SAMPLES ) * lightIntensity;
   }
-  return specularColor + diffuseColor;
-}
+  if( control.SOFT_SHADOWS_SAMPLES < 2){
+    return (specularColor + diffuseColor)/ (float) control.SOFT_SHADOWS_SAMPLES;
 
+  } else {
+      return light;
+  }
+}
 
 
 
@@ -359,8 +369,8 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
   vec3 reflectiveColor;
   vec3 refractiveColor;
     
-  float reflectivity = Objects[intersection.objIndex]->material.getReflectivity();
-  float refractiveIndex = Objects[intersection.objIndex]->material.getRefractiveIndex();
+  float reflectivity = Objects[intersection.objIndex]->getMaterial().getReflectivity();
+  float refractiveIndex = Objects[intersection.objIndex]->getMaterial().getRefractiveIndex();
   
   float bias_tmp = 0.1f;
   float kr = fresnel(ray.dir, intersection.normal, refractiveIndex);
@@ -406,9 +416,9 @@ vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, 
 // -------------------------- EXTRAS --------------------------------------------
 
 
-void SoftShadowPositions(vec3 positions[]){
+void SoftShadowPositions(vec3 positions[], vec3 lightPos){
   // Set first ray projection to be at 'light position'
-  positions[0] = Lights[0].position;
+  positions[0] = lightPos;
   // Settings to handle variable number of soft shadows
   float mul3 = (float) (control.SOFT_SHADOWS_SAMPLES - 1) / 3;
   float shift = (mul3 < 1) ? 0.007 : (mul3 < 4) ? 0.005 : (mul3 < 6) ? 0.004 : (mul3 < 11) ? 0.003 : 0.002 ;
@@ -418,13 +428,13 @@ void SoftShadowPositions(vec3 positions[]){
     float sign  = (i % 6 >= 3) ? -1 : 1;            // Rays from +/-
     int mod = i % 3;                                // Rays from (x,y,z)
     if (mod == 0){
-      positions[i] = Lights[0].position + vec3(shift, 0, 0) * sign * (float) (i + 1.0f); // Shift in X
+      positions[i] = lightPos + vec3(shift, 0, 0) * sign * (float) (i + 1.0f); // Shift in X
     }
     else if(mod == 1){
-      positions[i] = Lights[0].position + vec3(0, shift, 0) * sign * (float) i;          // Shift in Y
+      positions[i] = lightPos + vec3(0, shift, 0) * sign * (float) i;          // Shift in Y
     }
     else {
-      positions[i] = Lights[0].position + vec3(0, 0, shift) * sign * (float) (i - 1.0f); // Shift in Z
+      positions[i] = lightPos + vec3(0, 0, shift) * sign * (float) (i - 1.0f); // Shift in Z
     }
   }
 }
@@ -542,7 +552,7 @@ void Calculate_DOF() {
 }
 
 
-vec3 traceDofFromCamera1(float x, float y) {
+vec3 Calculate_DOF(float x, float y) {
   vec3 average_color = vec3( 0,0,0 );
   vec3 lightIntensity = vec3( 0,0,0 );
   
@@ -581,7 +591,7 @@ vec3 traceDofFromCamera1(float x, float y) {
     if(closestIntersection.didIntersect) {
       // Identify triangle, find colour and 'Put' corrisponding pixel
       int objectindex = closestIntersection.objIndex;
-      vec3 color = Objects[objectindex]->material.getColor();
+      vec3 color = Objects[objectindex]->getMaterial().getColor();
       lightIntensity = DirectLight(closestIntersection);
       float weighting = 1 - (std::min(abs(closestIntersection.distance), 1.0f) * ((totalPixels - 1) / totalPixels) );
       average_color += color * weighting;

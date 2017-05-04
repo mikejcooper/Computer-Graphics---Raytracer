@@ -26,7 +26,7 @@ public:
   
   Light() {
     position = vec3( 0, -0.5, -0.7 );
-    color = 14.0f * vec3( 1, 1, 1 );
+    color = 13.0f * vec3( 1, 1, 1 );
   }
   
   

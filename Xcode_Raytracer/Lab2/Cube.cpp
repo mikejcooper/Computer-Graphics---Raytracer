@@ -53,6 +53,7 @@ vec3 Cube::Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir) {
   
   float dot_e1e2d = dot(cross_e1e2, -dir);
   float dot_be2d =  dot(cross_be2, -dir);
+  
   float dot_e1bd =  dot(cross_e1b, -dir);
   
   // Point of intersection: x = (t, u, v), from v0 + ue1 + ve2 = s + td
@@ -97,5 +98,14 @@ void Cube::Update_Bounds()
                       std::max(b.max.z, bounds.max.z));
   }
 }
+
+Material Cube::getMaterial(){
+  return material;
+}
+
+int Cube::getId(){
+  return id;
+}
+
 
 

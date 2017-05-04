@@ -96,7 +96,7 @@ vec3 getAmbientLighting(Intersection intersection);
 vec3 getReflectiveRefractiveLighting(const Intersection& intersection, Ray ray, int depth) ;
 
 vec3    DirectLight( const Intersection& intersection );
-void    SoftShadowPositions(vec3 positions[]);
+void    SoftShadowPositions(vec3 positions[], vec3 lightPosition);
 void    AASampling(int pixelx, int pixely);
 vec3    AASuperSampling(float pixelx, float pixely);
 vec3    traceRayFromCamera(float x , float y);

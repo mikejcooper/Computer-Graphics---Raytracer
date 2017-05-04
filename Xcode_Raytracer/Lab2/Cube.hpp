@@ -18,16 +18,23 @@ class Cube : public Object
 public:
   std::vector<Triangle> triangles;
   Boundaries bounds;
+  
+  Material material;
+  int id;
 
   Cube(std::vector<Triangle> _triangles, Material _material)
-    : triangles(_triangles), Object(_material, 0)
+    : triangles(_triangles), material(_material), id(0)
   {
     Update_Bounds();
   }
   
-  virtual Intersection intersect(Ray, int);
-  virtual Boundaries getBounds();
-  virtual vec3 getNormal(int, vec3);
+  Intersection intersect(Ray, int);
+  Boundaries getBounds();
+  vec3 getNormal(int, vec3);
+  int getId();
+  Material getMaterial();
+
+  ~Cube() {};
 
   
   vec3 Calculate_Intersection(Triangle, vec3, vec3);

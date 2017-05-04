@@ -1,4 +1,4 @@
-FILE=Raytracer
+FILE=main
 
 ########
 #   Directories

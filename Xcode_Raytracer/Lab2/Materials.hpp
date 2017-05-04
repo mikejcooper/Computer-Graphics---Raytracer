@@ -18,7 +18,7 @@ class Glass : public Material {
 public:
 //  float _shininess, float _reflectiveness, float _refractiveIndex
   Glass (vec3 color)
-  : Material(0.0f, 0.00f, 1.5f, 2, color) {}
+  : Material(0.1f, 0.02f, 1.5f, 2, color) {}
 };
 
 class Phong : public Material {
@@ -26,7 +26,7 @@ class Phong : public Material {
 public:
   //  float _shininess, float _reflectiveness, float _refractiveIndex
   Phong (vec3 color)
-  : Material(0.00f, 0.02f, 1.0f, 1, color) {}
+  : Material(0.00f, 0.1f, 1.0f, 1, color) {}
 //  : Material(100.0f, 0.9f, 0.0f, 1, color) {}
 };
 

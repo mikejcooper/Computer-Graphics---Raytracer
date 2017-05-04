@@ -282,14 +282,16 @@ void LoadTestModel( std::vector<Object*> *Objects )
   triangles.clear();
   
   vec3 center = vec3(-0.5,0.7,-0.5);
-  float radius = 0.2f;
-  Material material = Phong(red);
+//  vec3 center = vec3(-0.1,0.2,-1.3);
+
+  float radius = 0.15f;
+  Material material = Mirror(red);
   
   Objects->push_back(new Sphere(center, radius, material));
   
-//  center = vec3(-0.0,0.1,-0.5);
-//  radius = 0.2f;
-//  material = Glass(trans);
+  center = vec3(-0.0,0.1,-0.5);
+  radius = 0.2f;
+  material = Glass(trans);
   
 //  Objects->push_back(new Sphere(center, radius, material));
   

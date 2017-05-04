@@ -86,3 +86,13 @@ vec3 Sphere::getNormal(int subIndex, vec3 intersectPosition) {
 Boundaries Sphere::getBounds() {
   return bounds;
 }
+
+Material Sphere::getMaterial(){
+  return material;
+}
+
+int Sphere::getId(){
+  return id;
+}
+
+

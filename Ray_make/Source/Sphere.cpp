@@ -9,61 +9,90 @@
 #include "Sphere.hpp"
 
 
+#include <math.h>
+
 Intersection Sphere::intersect(Ray ray, int i) {
-  Intersection intersection;
-    
-  for (int j = 0; j < triangles.size(); ++j) {
-    //      intersection a = object.intersection;
-    vec3 x =  Calculate_Intersection(triangles[j], ray.start, ray.dir);
-    if(i != ray.objectIndex && Intersects(x))  {
-      // If the current intersection is closer than previous, update
-      if(intersection.distance > x.x) {
-        intersection.distance = x.x;
-        intersection.position = ray.start + x.x * ray.dir;
-        intersection.triangleIndex = make_pair(i,j);
-        intersection.didIntersect = true;
-      }
-    }
+  vec3 deltap = ray.start - centre;
+  float a = glm::dot(ray.dir,ray.dir);
+  float b = glm::dot(deltap, ray.dir) * 2;
+  float c = glm::dot(deltap, deltap) - (radius * radius);
+  
+  float disc = b * b - 4 * a * c;
+  if (disc < 0) {
+    return Intersection(); // No intersection.
   }
+  
+  disc = sqrt(disc);
+  
+  float q;
+  if (b < 0) {
+    q = (-b - disc) * 0.5;
+  } else {
+    q = (-b + disc) * 0.5;
+  }
+  
+  float r1 = q / a;
+  float r2 = c / q;
+  
+  if (r1 > r2) {
+    float tmp = r1;
+    r1 = r2;
+    r2 = tmp;
+  }
+  
+  float distance = r1;
+  if (distance < 0) {
+    distance = r2;
+  }
+  
+  if (distance < 0 || isnan(distance)) {
+    return Intersection(); // No intersection.
+  }
+  
+  vec3 point = ray.start + (ray.dir * distance * 0.97f);
+  vec3 normal = glm::normalize(point - centre);
+  
+//  normal = material.modifyNormal(normal, point);
+  
+  
+  // Normal needs to be flipped if this is a refractive ray.
+//  if (glm::dot(ray.dir,normal) > 0) {
+//    normal = normal * -1.0f;
+//  }
+  
+  Intersection intersection = Intersection();
+  intersection.position = point;
+  intersection.distance = distance;
+  intersection.objIndex = i;
+  intersection.didIntersect = true;
+  intersection.normal = normal;
+  intersection.subIndex = -1;
+  
   return intersection;
+//  return Intersection(ray, point, distance, normal, ray.material, material, this);
+  
+//  : position( vec3() ), distance( 5000.0f ), triangleIndex( std::pair <int, int>() ), didIntersect( false ) {}
+
+  
 }
 
 
-
-
-vec3 Sphere::Calculate_Intersection(Triangle triangle, vec3 start, vec3 dir) {
-  // vi represents the vertices of the triangle
-  vec3 v0 = triangle.v0;
-  vec3 v1 = triangle.v1;
-  vec3 v2 = triangle.v2;
-  
-  vec3 e1 = v1 - v0;    // Vector parallel to edge of the triangle between v0 and v1
-  vec3 e2 = v2 - v0;    // Vector parallel to edge of the triangle between v0 and v2
-  vec3 b = start - v0;  // Vector parallel to edge between v0 and camara position
-  
-  
-  // Cramer's rule: faster than   // mat3 A( -dir, e1, e2 ); return inverse( A ) * b;
-  vec3 cross_e1e2 = cross(e1,e2);
-  vec3 cross_be2 = cross(b,e2);
-  vec3 cross_e1b = cross(e1,b);
-  
-  float dot_e1e2b = dot(cross_e1e2, b);
-  
-  float dot_e1e2d = dot(cross_e1e2, -dir);
-  float dot_be2d =  dot(cross_be2, -dir);
-  float dot_e1bd =  dot(cross_e1b, -dir);
-  
-  // Point of intersection: x = (t, u, v), from v0 + ue1 + ve2 = s + td
-  vec3 x = vec3(dot_e1e2b / dot_e1e2d, dot_be2d / dot_e1e2d, dot_e1bd / dot_e1e2d);
-  
-  
-  return x;
+vec3 Sphere::getNormal(int subIndex, vec3 intersectPosition) {
+  vec3 N = normalize(intersectPosition - centre);
+  return N;
 }
 
-bool Sphere::Intersects(vec3 x){
-  // Check if largest float value can hold intersection distance
-  float maxDist = std::numeric_limits<float>::max();
-  // Check x statisfy rules for intersection
-  return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && 0 <= x.x && (x.y + x.z) <= 1);
+
+Boundaries Sphere::getBounds() {
+  return bounds;
 }
+
+Material Sphere::getMaterial(){
+  return material;
+}
+
+int Sphere::getId(){
+  return id;
+}
+
 

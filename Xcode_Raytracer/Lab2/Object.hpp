@@ -26,21 +26,12 @@ class Object
 {
 public:
   
-  Material material;
-  int id;
-
-  Object(Material _material, int _id)
-  : material(_material), id(_id) {};
-  
-//  Object() {};
-  
   virtual Intersection intersect(Ray, int) = 0;
   virtual Boundaries getBounds() = 0;
   virtual vec3 getNormal(int, vec3) = 0;
-
+  virtual int getId() = 0;
+  virtual Material getMaterial() = 0;
   
-  int getId();
-
 };
 
 

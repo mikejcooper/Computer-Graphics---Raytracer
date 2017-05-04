@@ -9,21 +9,24 @@
 #include "Cube.hpp"
 
 Intersection Cube::intersect(Ray ray, int i) {
-  Intersection intersection;
+  Intersection intersection = Intersection();
   
   for (int j = 0; j < triangles.size(); ++j) {
-    //      intersection a = object.intersection;
     vec3 x =  Calculate_Intersection(triangles[j], ray.start, ray.dir);
     if(i != ray.objectIndex && Intersects(x))  {
       // If the current intersection is closer than previous, update
       if(intersection.distance > x.x) {
         intersection.distance = x.x;
         intersection.position = ray.start + x.x * ray.dir;
-        intersection.triangleIndex = make_pair(i,j);
+        intersection.objIndex = i;
         intersection.didIntersect = true;
+        // Unit vector perpendicular to plane.
+        intersection.normal = glm::normalize(triangles[j].normal);
+        intersection.subIndex = j;
       }
     }
   }
+  
   return intersection;
 }
 
@@ -65,4 +68,43 @@ bool Cube::Intersects(vec3 x){
   // Check x statisfy rules for intersection
   return (x.x <= maxDist) && (0 <= x.y && 0 <= x.z && 0 <= x.x && (x.y + x.z) <= 1);
 }
+
+Boundaries Cube::getBounds() {
+  return bounds;
+}
+
+vec3 Cube::getNormal(int subIndex, vec3 intersectPosition) {
+  return triangles[subIndex].normal;
+}
+
+void Cube::Update_Bounds()
+{
+  triangles[0].Update_Bounds();
+  bounds = triangles[0].bounds;
+  for (vector<Triangle>::iterator itr = triangles.begin(); itr < triangles.end(); itr++)
+  {
+    (itr)->Update_Bounds();
+    Boundaries b = (itr)->bounds;
+    
+    cout << bounds.max.x <<endl;
+    
+    bounds.min = vec3(std::min(b.min.x, bounds.min.x),
+                      std::min(b.min.y, bounds.min.y),
+                      std::min(b.min.z, bounds.min.z));
+    
+    bounds.max = vec3(std::max(b.max.x, bounds.max.x),
+                      std::max(b.max.y, bounds.max.y),
+                      std::max(b.max.z, bounds.max.z));
+  }
+}
+
+Material Cube::getMaterial(){
+  return material;
+}
+
+int Cube::getId(){
+  return id;
+}
+
+
 
